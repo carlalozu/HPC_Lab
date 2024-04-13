@@ -10,6 +10,10 @@
 #include "operators.h"
 #include "stats.h"
 
+#ifdef _OPENMP
+#include "omp.h" // This line won't add the library if you don't compile with -fopenmp
+#endif
+
 namespace operators
 {
 
@@ -36,6 +40,7 @@ namespace operators
         int jend = nx - 1;
 
         // the interior grid points
+#pragma omp parallel for
         for (int j = 1; j < jend; j++)
         {
             for (int i = 1; i < iend; i++)
@@ -50,6 +55,7 @@ namespace operators
         // east boundary
         {
             int i = nx - 1;
+#pragma omp parallel for
             for (int j = 1; j < jend; j++)
             {
                 f(i, j) = -(4. + alpha) * s_new(i, j) + s_new(i - 1, j) + bndE[j] +
@@ -61,6 +67,7 @@ namespace operators
         // west boundary
         {
             int i = 0;
+#pragma omp parallel for
             for (int j = 1; j < jend; j++)
             {
                 f(i, j) = -(4. + alpha) * s_new(i, j) + bndW[j] + s_new(i + 1, j) +
@@ -80,7 +87,8 @@ namespace operators
                           beta * s_new(i, j) * (1.0 - s_new(i, j));
             }
 
-            // north boundary
+// north boundary
+#pragma omp parallel for
             for (int i = 1; i < iend; i++)
             {
                 f(i, j) = -(4. + alpha) * s_new(i, j) + s_new(i - 1, j) +
@@ -110,7 +118,8 @@ namespace operators
                           beta * s_new(i, j) * (1.0 - s_new(i, j));
             }
 
-            // south boundary
+// south boundary
+#pragma omp parallel for
             for (int i = 1; i < iend; i++)
             {
                 f(i, j) = -(4. + alpha) * s_new(i, j) + s_new(i - 1, j) +
