@@ -1,5 +1,0 @@
-Conection on terminal
-ssh calopez@euler.ethz.ch
-
-Host
-sftp://euler.ethz.ch
