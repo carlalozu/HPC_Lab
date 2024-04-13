@@ -12,6 +12,10 @@
 #include "stats.h"
 #include "data.h"
 
+#ifdef _OPENMP
+#include "omp.h" // This line won't add the library if you don't compile with -fopenmp
+#endif
+
 namespace linalg
 {
 

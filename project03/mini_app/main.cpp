@@ -29,6 +29,12 @@ using namespace linalg;
 using namespace operators;
 using namespace stats;
 
+#ifdef _OPENMP
+#include "omp.h" // This line won't add the library if you don't compile with -fopenmp option.
+#else
+#define omp_get_num_threads() 0
+#endif
+
 // =============================================================================
 
 // read command line arguments
@@ -110,17 +116,26 @@ int main(int argc, char *argv[])
     double tolerance = 1.e-6;
 
     // get number of threads
-    int threads = 1; // serial case
+    int threads;
+    threads = omp_get_num_threads();
 
     // welcome message
     std::cout << std::string(80, '=') << std::endl;
     std::cout << "                      Welcome to mini-stencil!" << std::endl;
+
+#ifdef _OPENMP
+    std::cout << "version   :: C++ OpenMP" << std::endl;
+    std::cout << "threads   :: " << threads << std::endl;
+#else
     std::cout << "version   :: C++ Serial" << std::endl;
+#endif
+
     std::cout << "mesh      :: " << options.nx << " * " << options.nx
               << " dx = " << options.dx << std::endl;
     std::cout << "time      :: " << nt << " time steps from 0 .. "
               << options.nt * options.dt << std::endl;
-    std::cout << "iteration :: " << "CG " << max_cg_iters
+    std::cout << "iteration :: "
+              << "CG " << max_cg_iters
               << ", Newton " << max_newton_iters
               << ", tolerance " << tolerance << std::endl;
     std::cout << std::string(80, '=') << std::endl;
@@ -245,7 +260,8 @@ int main(int argc, char *argv[])
     fid << "VARIABLE: phi" << std::endl;
     fid << "DATA_ENDIAN: LITTLE" << std::endl;
     fid << "CENTERING: nodal" << std::endl;
-    fid << "BRICK_ORIGIN: " << "0. 0. 0." << std::endl;
+    fid << "BRICK_ORIGIN: "
+        << "0. 0. 0." << std::endl;
     fid << "BRICK_SIZE: " << (options.nx - 1) * options.dx << ' '
         << (options.nx - 1) * options.dx << ' '
         << " 1.0"
