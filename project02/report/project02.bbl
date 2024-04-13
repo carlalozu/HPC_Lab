@@ -1,0 +1,15 @@
+\begin{thebibliography}{1}
+
+\bibitem{hpc-tutorials-llnl-reduction}
+{Lawrence Livermore National Laboratory}.
+\newblock {OpenMP Directives: Data Scope Attribute Clauses: REDUCTION Clause}.
+\newblock \url{https://hpc-tutorials.llnl.gov/openmp/reduction_clause/}, 2024.
+\newblock [Online; accessed March 15, 2024].
+
+\bibitem{hpc-tutorials-llnl-critical}
+{Lawrence Livermore National Laboratory}.
+\newblock {OpenMP Directives: Synchronization Constructs: CRITICAL Directive}.
+\newblock \url{https://hpc-tutorials.llnl.gov/openmp/critical_directive/}, 2024.
+\newblock [Online; accessed March 15, 2024].
+
+\end{thebibliography}

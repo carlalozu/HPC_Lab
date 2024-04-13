@@ -1,0 +1,4 @@
+Sequential RunTime:  8.232878 seconds
+Final Result Sn   :  485165097.62511122 
+Result ||opt||^2_2 :  5884629305179574.000000
+

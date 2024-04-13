@@ -1,0 +1,16 @@
+
+Inactive Modules:
+  1) openblas/0.2.20     2) python/3.8.5
+
+The following have been reloaded with a version change:
+  1) gcc/6.3.0 => gcc/11.4.0
+
+
+Currently Loaded Modules:
+  1) StdEnv   2) gcc/11.4.0
+
+Inactive Modules:
+  1) openblas/0.2.20   2) python/3.8.5
+
+ 
+

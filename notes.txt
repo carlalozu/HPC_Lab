@@ -1,0 +1,12 @@
+Conection on terminal
+ssh calopez@euler.ethz.ch
+
+Host
+sftp://euler.ethz.ch
+
+// Run batch job
+chmod +x run_pi_euler.sh
+./run_pi_euler.sh       
+
+
+gcc -Wall -std=gnu99 -I/opt/homebrew/opt/libomp/include -Xclang -fopenmp omp_bug1.c

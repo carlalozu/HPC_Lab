@@ -1,0 +1,38 @@
+\begin{thebibliography}{1}
+
+\bibitem{uops-info}
+{uops.info}.
+\newblock \url{https://uops.info/table.html}.
+\newblock [Online; accessed 28-February-2024].
+
+\bibitem{amd-epyc-7H12}
+{Advanced Micro Devices, Inc.}
+\newblock {AMD EPYC 7H12 Processor}.
+\newblock \url{https://www.amd.com/en/products/cpu/amd-epyc-7H12}, 2019.
+\newblock [Online; accessed 27-February-2024].
+
+\bibitem{amd-epyc-7763}
+{Advanced Micro Devices, Inc.}
+\newblock {AMD EPYC 7763 Processor}.
+\newblock \url{https://www.amd.com/en/products/cpu/amd-epyc-7763}, 2021.
+\newblock [Online; accessed 27-February-2024].
+
+\bibitem{hager2021amd}
+Georg Hager.
+\newblock Is {AMD}'s {EPYC} the right architecture for extreme-scale computing?
+\newblock \url{https://blogs.fau.de/hager/files/2021/10/sc21-01_architecture.pdf}, 2021.
+\newblock [Online; accessed 27-February-2024].
+
+\bibitem{intel-oneapi}
+Intel.
+\newblock {Intel oneAPI DPC++/C++ Compiler Developer Guide and Reference}.
+\newblock \url{https://cdrdv2.intel.com/v1/dl/getContent/792222?fileName=dpcpp-cpp-compiler_developer-guide-reference_2024.0-767253-792222.pdf}, 2024.
+\newblock [Online; accessed 5-Mars-2024].
+
+\bibitem{euler-ethz}
+ETH Zurich.
+\newblock {Euler}.
+\newblock \url{https://scicomp.ethz.ch/wiki/Euler}.
+\newblock [Online; accessed 28-February-2024].
+
+\end{thebibliography}

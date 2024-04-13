@@ -1,0 +1,117 @@
+\documentclass[unicode,11pt,a4paper,oneside,numbers=endperiod,openany]{scrartcl}
+
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{amsmath}
+
+% Define custom verbatim environment with gray background
+\lstnewenvironment{grayverbatim}{%
+  \lstset{backgroundcolor=\color{gray!10}, % Adjust the shade of gray as desired
+          frame=single,
+          framerule=0pt,
+          basicstyle=\ttfamily,
+          breaklines=true,
+          columns=fullflexible}
+}{}
+
+\lstnewenvironment{cppverbatim}{%
+  \lstset{language=C++, % Set the language to C++
+          backgroundcolor=\color{gray!10}, % Adjust the shade of gray as desired
+          frame=single,
+          framerule=0pt,
+          basicstyle=\ttfamily,
+          keywordstyle=\color{blue}, % Set the color for keywords
+          commentstyle=\color{green!50!black}, % Set the color for comments
+          stringstyle=\color{red}, % Set the color for strings
+          breaklines=true,
+          showstringspaces=false, % Don't show spaces within strings
+          columns=fullflexible}
+}{}
+
+\input{assignment.sty}
+
+\begin{document}
+
+
+\setassignment
+\setduedate{Monday 15 April 2024, 23:59 (midnight)}
+
+\serieheader{High-Performance Computing Lab for CSE}{2024}
+            {Student: CARLA JUDITH LOPEZ ZURITA}
+            {Discussed with: FULL NAME}{Solution for Project 3}{}
+\newline
+
+\assignmentpolicy
+
+In this report, we are solving Fisher's equation using the finite difference
+method. The equation is given by:
+\begin{align}
+    \frac{\partial s}{\partial t} = D \nabla^2 u + R s (1 - s)
+\end{align}
+where $s$ is the concentration of a species, $D$ is the diffusion coefficient,
+and $R$ is the reaction rate. The equation is solved on a 2D grid with
+Dirichlet boundary conditions,
+\begin{align}
+    s(x, y, t) = 0.1 \quad \text{for} \quad x = 0, x = 1, y = 0, y = 1
+\end{align}
+and initial conditions is a circle of radius $1/8$ at the lower left quadrant the domain.
+\section{Task: Implementing the linear algebra functions and the stencil
+         operators [40 Points]}
+
+The first part of the project is to implement the linear algebra functions and
+the stencil operators. The linear algebra functions are implemented in the
+\texttt{linalg.cpp} file. As first try, I implementd all the functions using
+simple loops. I tried using iterators but since the Fields class is a coustom
+class, I decided to put that idea on hold until I have a better understanding of
+the code. On the other hand, the stencil operators are implemented in the
+\texttt{operators.cpp}. Writing the interior grid points was very simple since
+we already had the implementations for the boundary conditions.
+
+Afterwards, I ran the code following the indications on the project description
+and I got the following results in the terminal
+\begin{grayverbatim}
+================================================================================
+                      Welcome to mini-stencil!
+version   :: C++ Serial
+mesh      :: 128 * 128 dx = 0.00787402
+time      :: 100 time steps from 0 .. 0.005
+iteration :: CG 300, Newton 50, tolerance 1e-06
+================================================================================
+--------------------------------------------------------------------------------
+simulation took 0.203392 seconds
+1513 conjugate gradient iterations, at rate of 7438.82 iters/second
+300 newton iterations
+--------------------------------------------------------------------------------
+### 1, 128, 100, 1513, 300, 0.203392 ###
+Goodbye!
+\end{grayverbatim}
+Which are the expected results, even if a bit slower than the results included
+in the original document, but this is just one run and could be attributed to
+the randomness of run-time of the processes. Additionally, I got the following content for
+the \texttt{output.bin} file,
+\begin{grayverbatim}
+TIME: 0.005
+DATA_FILE: output.bin
+DATA_SIZE: 128 128 1
+DATA_FORMAT: DOUBLE
+VARIABLE: phi
+DATA_ENDIAN: LITTLE
+CENTERING: nodal
+BRICK_ORIGIN: 0. 0. 0.
+BRICK_SIZE: 1 1  1.0
+\end{grayverbatim}
+which produced Fig. \ref{im:final_time}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{../mini_app/output.png}
+    \caption{The population concentration at time t = 0.005.}
+    \label{im:final_time}
+\end{figure}
+
+\section{Task:  Adding OpenMP to the nonlinear PDE mini-app [60 Points]}
+This section is dedicated to parallelizing the code using OpenMP. The first step
+was to parallelize the linear algebra functions. I used the \texttt{omp
+parallel for} directive to parallelize the loops. The stencil operators were
+
+
+\end{document}
