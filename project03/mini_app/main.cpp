@@ -117,14 +117,16 @@ int main(int argc, char *argv[])
 
     // get number of threads
     int threads;
-    threads = omp_get_num_threads();
-
     // welcome message
     std::cout << std::string(80, '=') << std::endl;
     std::cout << "                      Welcome to mini-stencil!" << std::endl;
 
 #ifdef _OPENMP
     std::cout << "version   :: C++ OpenMP" << std::endl;
+#pragma omp parallel
+    {
+        threads = omp_get_num_threads();
+    }
     std::cout << "threads   :: " << threads << std::endl;
 #else
     std::cout << "version   :: C++ Serial" << std::endl;

@@ -55,6 +55,7 @@ namespace linalg
     double hpc_dot(Field const &x, Field const &y, const int N)
     {
         double result = 0;
+#pragma omp parallel for reduction(+ : result)
         for (int i = 0; i < N; i++)
         {
             result += x[i] * y[i];
@@ -68,6 +69,7 @@ namespace linalg
     double hpc_norm2(Field const &x, const int N)
     {
         double result = 0;
+#pragma omp parallel for reduction(+ : result)
         for (int i = 0; i < N; i++)
         {
             result += x[i] * x[i];
@@ -81,6 +83,7 @@ namespace linalg
     // value is a scalar
     void hpc_fill(Field &x, const double value, const int N)
     {
+#pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             x[i] = value;
@@ -96,6 +99,7 @@ namespace linalg
     // alpha is a scalar
     void hpc_axpy(Field &y, const double alpha, Field const &x, const int N)
     {
+#pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             y[i] += alpha * x[i];
@@ -108,6 +112,7 @@ namespace linalg
     void hpc_add_scaled_diff(Field &y, Field const &x, const double alpha,
                              Field const &l, Field const &r, const int N)
     {
+#pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             y[i] = x[i] + alpha * (l[i] - r[i]);
@@ -120,6 +125,7 @@ namespace linalg
     void hpc_scaled_diff(Field &y, const double alpha, Field const &l,
                          Field const &r, const int N)
     {
+#pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             y[i] = alpha * (l[i] - r[i]);
@@ -131,6 +137,7 @@ namespace linalg
     // y and x are vectors on length n
     void hpc_scale(Field &y, const double alpha, Field const &x, const int N)
     {
+#pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             y[i] = alpha * x[i];
@@ -143,6 +150,7 @@ namespace linalg
     void hpc_lcomb(Field &y, const double alpha, Field const &x, const double beta,
                    Field const &z, const int N)
     {
+#pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             y[i] = alpha * x[i] + beta * z[i];
@@ -153,6 +161,7 @@ namespace linalg
     // x and y are vectors of length N
     void hpc_copy(Field &y, Field const &x, const int N)
     {
+#pragma omp parallel for
         for (int i = 0; i < N; i++)
         {
             y[i] = x[i];
