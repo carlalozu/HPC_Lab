@@ -12,6 +12,7 @@ build/
 # ignore *.exe and *.out files
 *.exe
 *.out
+*.err
 # ignore *.swp, *.a, *.aux, *.log, *.o, *.pyc
 *.swp
 *.a
