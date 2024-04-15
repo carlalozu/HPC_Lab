@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
+sns.set(style="whitegrid", font_scale=1.1)
 # Read data from results.txt into a pandas DataFrame
 data_strong = pd.read_csv('results_strong.txt')
 data_serial = pd.read_csv('results_serial.txt')

@@ -162,7 +162,7 @@ It was a bit challenging to be able to determine the run time for certain using
 only one run, since there seemed to be a lot of variability in the run times.
 The codes to compile and run the experiments are included in the bash scripts
 accompanying this report. We can see the distribution of the run times in Fig. \ref{im:times}.
-\begin{figure}
+\begin{figure}[!h]
     \centering
     \includegraphics[width=\textwidth]{../mini_app/data_var.pdf}
     \caption{Time taken for the serial and parallel versions of the code; zero threads indicates serial version.}
@@ -170,28 +170,47 @@ accompanying this report. We can see the distribution of the run times in Fig. \
 \end{figure}
 Since the run times are so variable, I decided to use the median of the run
 times
-to determine the run time for the strong and weak scaling experiments. The
-results
-are shown in Figs. \ref{im:strong_scaling}
-\begin{figure}
+to determine the run time for the strong and weak scaling experiments. We can
+see that specially when using 16 threads, the variability is very high and there
+is a large number of outliers. This puts into question how relliable is
+benchmarking on the Euler cluster. There is also the interesting case of 4
+threads on a $64\times64$ grid which seems to have very high run times compared
+to the other cases. I wonder if this has something to do with hardware.
+
+The results of the strong scaling are shown in Fig. \ref{im:strong_scaling}
+\begin{figure}[!h]
     \centering
     \includegraphics[width=\textwidth]{../mini_app/strong_scaling_plot.pdf}
     \caption{Strong scaling of the code.}
     \label{im:strong_scaling}
 \end{figure}
+The beyond optimal performance can be explained by the chosen representative of
+the time in the serial and parallel versions. The plot shows that the parallel
+implementation is doing a good job at scaling with the number of threads when
+the grid size is at a certain level that is not too small.
+At first, running it with a small grid size, the parallel version does not show
+an improvement in performance. This can be explained with the overhead of
+parallelizing the  code. But we can see that as the grid size increases, the
+parallel version is able to take advantage of the multiple threads and the
+performance improves.
 
 \subsection*{Weak scaling}
 For the weak scaling, I ran the code for the parallel verison 100 times for each
-combination of threads and grid size. The results are shown in Fig.
-\ref{im:weak_scaling}. I followed the same procedure as for the strong scaling
-to determine the run time.
+combination of threads and grid size. 
+Following the previous analysis of run times, I again
+used the median as representative. 
+The results are shown in Fig. \ref{im:weak_scaling}.
 
-\begin{figure}
+\begin{figure}[!h]
     \centering
     \includegraphics[width=\textwidth]{../mini_app/weak_scaling_plot.pdf}
     \caption{Weak scaling of the code.}
     \label{im:weak_scaling}
 \end{figure}
-
+The figure shows that the parallel version is able to scale well with the grid,
+although not reaching the ideal performance, which is expected. The performance
+is still good, reaching mostly arounf 0.7, except for the case of 16 threads. As
+discussed before, this configuration seems to have a large variability in the
+run times.
 
 \end{document}
