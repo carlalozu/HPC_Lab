@@ -6,7 +6,7 @@
 #SBATCH --constraint=EPYC_7763    # Select node with CPU
 #SBATCH --cpus-per-task=16         # Number of CPUs per task
 #SBATCH --mem-per-cpu=1024        # Memory per CPU
-#SBATCH --time=00:05:00           # Wall clock time limit
+#SBATCH --time=01:00:00           # Wall clock time limit
 
 # Load some modules & list loaded modules
 module load gcc python
@@ -22,7 +22,8 @@ echo "threads,nx,nt,iters_cg,iters_newton,timespent" | tee -a results_serial.txt
 for ((k=0; k<5; k++)) do
     N=$((64*(2**k)))
     echo "Running with $N N"
-    ./main $N 100 0.005 |  grep -i "###" | sed 's/###//g' | sed 's/ //g' | tee -a results_serial.txt
+    for ((j=0; j<100; j++)) do
+        ./main $N 100 0.005 |  grep -i "###" | sed 's/###//g' | sed 's/ //g' | tee -a results_serial.txt
     done
 done
 # python plot.py
