@@ -16,12 +16,12 @@ nx = df_strong['nx'].unique()
 threads = df_strong['threads'].unique()
 
 
-sns.set(style="whitegrid", font_scale=1.4)
+sns.set(style="whitegrid", font_scale=1.1)
 
 
 # Create FacetGrid for each 'nx' value
 g = sns.FacetGrid(df_complete, col="nx", col_wrap=3,
-                  height=4, aspect=1.2, sharey=False)
+                  height=4, aspect=1, sharey=False)
 g.map_dataframe(sns.boxplot, x="threads", y="timespent", palette="Set3")
 g.set(yscale="log")
 # g.add_legend(title="threads", loc="lower right")
@@ -31,6 +31,5 @@ g.set_axis_labels("Threads", "Time (s)")
 g.set_titles("nx = {col_name}")
 
 plt.tight_layout()
-plt.show()
 
 g.savefig("data_var.pdf")
