@@ -38,7 +38,7 @@
 
 \serieheader{High-Performance Computing Lab for CSE}{2024}
             {Student: CARLA JUDITH LOPEZ ZURITA}
-            {Discussed with: FULL NAME}{Solution for Project 3}{}
+            {Discussed with: RITVIK RANJAN}{Solution for Project 3}{}
 \newline
 
 \assignmentpolicy
@@ -87,10 +87,8 @@ simulation took 0.203392 seconds
 ### 1, 128, 100, 1513, 300, 0.203392 ###
 Goodbye!
 \end{grayverbatim}
-Which are the expected results, even if a bit slower than the results included
-in the original document, but this is just one run and could be attributed to
-the randomness of run-time of the processes. Additionally, I got the following content for
-the \texttt{output.bin} file,
+Which are the matching with the expected results.
+Additionally, I got the following content for the \texttt{output.bin} file,
 \begin{grayverbatim}
 TIME: 0.005
 DATA_FILE: output.bin
@@ -102,13 +100,15 @@ CENTERING: nodal
 BRICK_ORIGIN: 0. 0. 0.
 BRICK_SIZE: 1 1  1.0
 \end{grayverbatim}
-which produced Fig. \ref{im:final_time}.
-\begin{figure}[h]
+When plotting the results, they seem to be as expected; the population concentration is higher at
+the lower left quadrant of the domain, which is matching with the initial condition.
+\begin{figure}[!h]
     \centering
-    \includegraphics[width=0.5\textwidth]{../mini_app/output.png}
+    \includegraphics[width=0.5\textwidth]{../mini_app/output_high_res.png}
     \caption{The population concentration at time t = 0.005.}
     \label{im:final_time}
 \end{figure}
+Fig. \ref{im:final_time} shows the results corresponding to a run with a $1024 \times 1024$ grid.
 
 \section{Task:  Adding OpenMP to the nonlinear PDE mini-app [60 Points]}
 This section is dedicated to parallelizing the code using OpenMP. 
@@ -139,20 +139,47 @@ This seems to work as expected. The code is compiled with the \texttt{-fopenmp}
 flag to enable OpenMP.
 
 \subsection*{Linear algebra kernel}
-Afterwards, the first step to parallelize the code was to work on the linear algebra functions. I used simple \texttt{omp
-parallel for} directive to parallelize the loops.
+Afterwards, the first step to parallelize the code was to work on the linear
+algebra functions. I used simple \texttt{pragma omp
+parallel for}  and 
+\texttt{pragma omp parallel for reduction(+:result)} directives to parallelize the loops.
 
 \subsection*{The diffusion stencil}
-Then, I parallelized the
-stencil operators. I used the same directive as before. 
+Then, I parallelized the diffusion stencil using the \texttt{pragma omp
+parallel for} directive. This was really straightforward since the stencil is
+mainly composed of simple loops.
+The boundary loops are important since they are implementing the Dirichlet
+boundary conditions. They take the data stored in the \texttt{bndW} data
+structure and apply it to the boundary points of the grid to calculate the
+diffusion. 
 
-\subsection*{Bitwise identical results}
-I converted the bin files to hex files to be able to see clearly if the parallel
-implementation was producing bitwise identical results. The reults was that they
-were not identical.
+% What role do the boundary loops play?
 
-TODO: Discuss
+\subsection*{Bitwise identical results}\label{sec:bitwise}
+I converted the \textbf{bin} files to \textbf{hex} files to be able to see clearly if the parallel
+implementation was producing bitwise identical results. The reults were that they
+were not identical. The main reson is that floating
+point operations are not associative, and the order of the operations can change
+the results. This is influences some calculations such as the dot product
+between two vectors. 
+Another reason I thought initially may interfere was the implementation of the diffusion
+stencil, but upon further inspection, I realized that the update is using the
+\texttt{s\_new} and \texttt{s\_old} data structures, which are not updated in the
+stencil operation and therefore should not be affected by the parallelization.
 
+In my opinion, in order to get bitwise identical results, one
+would need to parallelize instead by splitting the grid into chunks and then use
+ghost cells to communicate the boundary conditions. This would be a more complex
+implementation, but it should be able to produce bitwise identical results. This
+would then require for some synchronization between the threads to make sure
+that the boundary conditions are correctly applied. Also, some directives like
+the \texttt{reduction} should be avoided.
+
+% Argue if your threaded OpenMP PDE solver can be implemented so that it produces bitwise-identical
+% results (i.e., without any parallel side effects or not).
+% Hint: Recall that floating point addition/multiplication operations are not associative and the note on
+% parallel reduction in the OpenMP
+% documentation.
 \subsection*{Strong scaling}
 Next, we want to analyze the performance of the code. We will analyze the strong
 and weak scaling of the code. I repeated the runs 100 times for the serial and
@@ -162,7 +189,7 @@ It was a bit challenging to be able to determine the run time for certain using
 only one run, since there seemed to be a lot of variability in the run times.
 The codes to compile and run the experiments are included in the bash scripts
 accompanying this report. We can see the distribution of the run times in Fig. \ref{im:times}.
-\begin{figure}[!h]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{../mini_app/data_var.pdf}
     \caption{Time taken for the serial and parallel versions of the code; zero threads indicates serial version.}
@@ -178,7 +205,7 @@ threads on a $64\times64$ grid which seems to have very high run times compared
 to the other cases. I wonder if this has something to do with hardware.
 
 The results of the strong scaling are shown in Fig. \ref{im:strong_scaling}
-\begin{figure}[!h]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{../mini_app/strong_scaling_plot.pdf}
     \caption{Strong scaling of the code.}
@@ -201,7 +228,7 @@ Following the previous analysis of run times, I again
 used the median as representative. 
 The results are shown in Fig. \ref{im:weak_scaling}.
 
-\begin{figure}[!h]
+\begin{figure}
     \centering
     \includegraphics[width=\textwidth]{../mini_app/weak_scaling_plot.pdf}
     \caption{Weak scaling of the code.}
@@ -209,7 +236,7 @@ The results are shown in Fig. \ref{im:weak_scaling}.
 \end{figure}
 The figure shows that the parallel version is able to scale well with the grid,
 although not reaching the ideal performance, which is expected. The performance
-is still good, reaching mostly arounf 0.7, except for the case of 16 threads. As
+is still good, reaching mostly around 0.7, except for the case of 16 threads. As
 discussed before, this configuration seems to have a large variability in the
 run times.
 

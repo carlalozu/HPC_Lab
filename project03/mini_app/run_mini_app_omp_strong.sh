@@ -16,8 +16,8 @@ make clean
 make main CXXFLAGS=-fopenmp
 
 # Create results file
-# > results_strong.txt
-# echo "threads,nx,nt,iters_cg,iters_newton,timespent" | tee -a results_strong.txt
+> results_strong.txt
+echo "threads,nx,nt,iters_cg,iters_newton,timespent" | tee -a results_strong.txt
 
 N=$((64*(2**4)))
 echo "Running with $N N"
