@@ -55,7 +55,7 @@
 
 int main(int argc, char *argv[])
 {
-    int rank, size, i, j, dims[2], periods[2], rank_top, rank_bottom, rank_left, rank_right;
+    int rank, size, i, j, dims[2], periods[2], rank_top, rank_bottom, rank_left, rank_right, tag = 1;
     double data[DOMAINSIZE * DOMAINSIZE];
     MPI_Request request;
     MPI_Status status;
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     // the reordering of ranks) and use it to find your neighboring
     // ranks in all dimensions in a cyclic manner.
     int reorder = false;
-    
+
     MPI_Dims_create(size, 2, dims);
     MPI_Comm new_communicator;
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, reorder, &new_communicator);
@@ -113,28 +113,68 @@ int main(int argc, char *argv[])
     MPI_Cart_shift(new_communicator, 0, 1, &neighbours_ranks[UP], &neighbours_ranks[DOWN]);
 
     // find your top/bottom/left/right neighbor using the new communicator, see MPI_Cart_shift()
-    // rank_top, rank_bottom
-    // rank_left, rank_right
-    // Get my rank in the new communicator
-
-    for (int i = 0; i < 4; i++)
-    {
-        printf("[MPI process %d] I have a %s neighbour: process %d.\n", rank, neighbours_names[i], neighbours_ranks[i]);
-    }
+    rank_left = neighbours_ranks[0];
+    rank_right = neighbours_ranks[1];
+    rank_top = neighbours_ranks[2];
+    rank_bottom = neighbours_ranks[3];
 
     //  TODO: create derived datatype data_ghost, create a datatype for sending the column, see MPI_Type_vector() and MPI_Type_commit()
-    // data_ghost
 
-    //  TODO: ghost cell exchange with the neighbouring cells in all directions
+    //  ghost cell exchange with the neighbouring cells in all directions
     //  use MPI_Irecv(), MPI_Send(), MPI_Wait() or other viable alternatives
 
+    // TODO: send and receive vectors not just values
+    int a = 4;
+    int b;
+    int c = 1;
+
     //  to the top
+    MPI_Send(&a, 1, MPI_INT, rank_top, tag, MPI_COMM_WORLD);
+    // printf("[MPI process %d] I have sent a to top rank. \n", rank);
+
+    MPI_Recv(&b, 1, MPI_INT, rank_bottom, tag, MPI_COMM_WORLD, &status);
+    // printf("[MPI process %d] I have received from bottom rank. \n", rank);
+    for (i = 0; i < DOMAINSIZE; i++)
+    {
+        data[i + (DOMAINSIZE-1) * DOMAINSIZE] += b;
+        // printf("%.1f ", data[i + (DOMAINSIZE - 1) * DOMAINSIZE]);
+    }
 
     //  to the bottom
+    MPI_Send(&a, 1, MPI_INT, rank_bottom, tag, MPI_COMM_WORLD);
+    // printf("[MPI process %d] I have sent a to bottom rank. \n", rank);
+
+    MPI_Recv(&b, 1, MPI_INT, rank_top, tag, MPI_COMM_WORLD, &status);
+    // printf("[MPI process %d] I have received from top rank. \n", rank);
+    for (i = 0; i < DOMAINSIZE; i++)
+    {
+        data[i] -= b;
+        // printf("%.1f ", data[i + 0 * DOMAINSIZE]);
+    }
 
     //  to the left
+    MPI_Send(&c, 1, MPI_INT, rank_left, tag, MPI_COMM_WORLD);
+    // printf("[MPI process %d] I have sent a to left rank. \n", rank);
+
+    MPI_Recv(&b, 1, MPI_INT, rank_right, tag, MPI_COMM_WORLD, &status);
+    // printf("[MPI process %d] I have received a from right rank. \n", rank);
+    for (i = 0; i < DOMAINSIZE; i++)
+    {
+        data[i * DOMAINSIZE-1] += b;
+        // printf("%.1f ", data[i * DOMAINSIZE]);
+    }
 
     //  to the right
+    MPI_Send(&c, 1, MPI_INT, rank_right, tag, MPI_COMM_WORLD);
+    // printf("[MPI process %d] I have sent a to right rank. \n", rank);
+
+    MPI_Recv(&b, 1, MPI_INT, rank_left, tag, MPI_COMM_WORLD, &status);
+    // printf("[MPI process %d] I have received a from left rank. \n", rank);
+    for (i = 0; i < DOMAINSIZE; i++)
+    {
+        data[i * DOMAINSIZE] -= b;
+        // printf("%.1f ", data[DOMAINSIZE + i * DOMAINSIZE]);
+    }
 
     if (rank == 9)
     {
@@ -144,7 +184,6 @@ int main(int argc, char *argv[])
             for (i = 0; i < DOMAINSIZE; i++)
             {
                 printf("%.1f ", data[i + j * DOMAINSIZE]);
-                printf("%4.1f ", data[i + j * DOMAINSIZE]);
             }
             printf("\n");
         }
