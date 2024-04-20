@@ -138,23 +138,28 @@ int main(int argc, char *argv[])
     //  ghost cell exchange with the neighbouring cells in all directions
     //  use MPI_Irecv(), MPI_Send(), MPI_Wait() or other viable alternatives
 
-    //  to the top
-    MPI_Send(&data[1], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD);
-    //  to the bottom
-    MPI_Send(&data[DOMAINSIZE*(DOMAINSIZE-1)+1], 1, data_ghost_row, rank_bottom, tag, MPI_COMM_WORLD);
-    //  to the left
-    MPI_Send(&data[DOMAINSIZE], 1, data_ghost_col, rank_left, tag, MPI_COMM_WORLD);
-    //  to the right
-    MPI_Send(&data[DOMAINSIZE*2-1], 1, data_ghost_col, rank_right, tag, MPI_COMM_WORLD);
+    int first_row_index = 1;
+    int last_row_index = DOMAINSIZE*(DOMAINSIZE-1)+1;
+    int first_col_index = DOMAINSIZE;
+    int last_col_index = DOMAINSIZE*2-1;
 
-    // from bottom
-    MPI_Recv(&data[DOMAINSIZE*(DOMAINSIZE-1)+1], 1, data_ghost_row, rank_bottom, tag, MPI_COMM_WORLD, &status);
+    //  to the top
+    MPI_Send(&data[first_row_index], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD);
+    //  to the bottom
+    MPI_Send(&data[last_row_index], 1, data_ghost_row, rank_bottom, tag, MPI_COMM_WORLD);
+    //  to the right
+    MPI_Send(&data[last_col_index], 1, data_ghost_col, rank_right, tag, MPI_COMM_WORLD);
+    //  to the left
+    MPI_Send(&data[first_col_index], 1, data_ghost_col, rank_left, tag, MPI_COMM_WORLD);
+
     // from top
-    MPI_Recv(&data[1], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv(&data[first_row_index], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD, &status);
+    // from bottom
+    MPI_Recv(&data[last_row_index], 1, data_ghost_row, rank_bottom, tag, MPI_COMM_WORLD, &status);
     // from right
-    MPI_Recv(&data[DOMAINSIZE*2-1], 1, data_ghost_col, rank_right, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv(&data[last_col_index], 1, data_ghost_col, rank_right, tag, MPI_COMM_WORLD, &status);
     // from left
-    MPI_Recv(&data[DOMAINSIZE], 1, data_ghost_col, rank_left, tag, MPI_COMM_WORLD, &status);
+    MPI_Recv(&data[first_col_index], 1, data_ghost_col, rank_left, tag, MPI_COMM_WORLD, &status);
 
     if (rank == 9)
     {
