@@ -49,7 +49,6 @@
 #include <stdlib.h>
 #include <mpi.h>
 #include <stdbool.h>
-#include <string.h>
 
 #define SUBDOMAIN 6
 #define DOMAINSIZE (SUBDOMAIN + 2)
@@ -143,15 +142,17 @@ int main(int argc, char *argv[])
     int first_col_index = DOMAINSIZE;
     int last_col_index = DOMAINSIZE*2-1;
 
-    //  to the top
+    // SEND
+    //  to top
     MPI_Send(&data[first_row_index], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD);
-    //  to the bottom
+    //  to bottom
     MPI_Send(&data[last_row_index], 1, data_ghost_row, rank_bottom, tag, MPI_COMM_WORLD);
-    //  to the right
+    //  to right
     MPI_Send(&data[last_col_index], 1, data_ghost_col, rank_right, tag, MPI_COMM_WORLD);
-    //  to the left
+    //  to left
     MPI_Send(&data[first_col_index], 1, data_ghost_col, rank_left, tag, MPI_COMM_WORLD);
 
+    // RECEIVE
     // from top
     MPI_Recv(&data[first_row_index], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD, &status);
     // from bottom
