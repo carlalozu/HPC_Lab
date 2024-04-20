@@ -136,17 +136,7 @@ int main(int argc, char *argv[])
     MPI_Type_commit(&data_ghost_col);
 
     //  ghost cell exchange with the neighbouring cells in all directions
-    //  use MPI_Recv(), MPI_Send(), MPI_Wait() or other viable alternatives
-
-    // send and receive vectors not just values
-    double a[SUBDOMAIN];
-    double b[SUBDOMAIN];
-
-    for (i = 0; i <= SUBDOMAIN; i++)
-    {
-        // Make vector of rank number
-        a[i] = rank;
-    }
+    //  use MPI_Irecv(), MPI_Send(), MPI_Wait() or other viable alternatives
 
     //  to the top
     MPI_Send(&data[1], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD);
