@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include <mpi.h>
 #include <stdbool.h>
+#include <string.h>
 
 #define SUBDOMAIN 6
 #define DOMAINSIZE (SUBDOMAIN + 2)
@@ -60,10 +61,17 @@ int main(int argc, char *argv[])
     MPI_Request request;
     MPI_Status status;
     MPI_Comm comm_cart;
-    MPI_Datatype data_ghost;
+    MPI_Datatype data_ghost_row;
+    MPI_Datatype data_ghost_col;
 
     // Initialize MPI
-    MPI_Init(&argc, &argv);
+    int ierr;
+    ierr = MPI_Init(&argc, &argv);
+    if (ierr != MPI_SUCCESS) {
+        fprintf(stderr, "Error initializing MPI.\n");
+        MPI_Abort(MPI_COMM_WORLD, ierr);
+    }
+
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -118,63 +126,45 @@ int main(int argc, char *argv[])
     rank_top = neighbours_ranks[2];
     rank_bottom = neighbours_ranks[3];
 
-    //  TODO: create derived datatype data_ghost, create a datatype for sending the column, see MPI_Type_vector() and MPI_Type_commit()
+    // create derived datatype data_ghost_row
+    MPI_Type_contiguous(SUBDOMAIN, MPI_DOUBLE, &data_ghost_row);
+    MPI_Type_commit(&data_ghost_row);
+
+    // create a datatype for sending the column, 
+    // see MPI_Type_vector() and MPI_Type_commit()
+    MPI_Type_vector(SUBDOMAIN, 1, DOMAINSIZE, MPI_DOUBLE, &data_ghost_col);
+    MPI_Type_commit(&data_ghost_col);
 
     //  ghost cell exchange with the neighbouring cells in all directions
-    //  use MPI_Irecv(), MPI_Send(), MPI_Wait() or other viable alternatives
+    //  use MPI_Recv(), MPI_Send(), MPI_Wait() or other viable alternatives
 
-    // TODO: send and receive vectors not just values
-    int a = 4;
-    int b;
-    int c = 1;
+    // send and receive vectors not just values
+    double a[SUBDOMAIN];
+    double b[SUBDOMAIN];
+
+    for (i = 0; i <= SUBDOMAIN; i++)
+    {
+        // Make vector of rank number
+        a[i] = rank;
+    }
 
     //  to the top
-    MPI_Send(&a, 1, MPI_INT, rank_top, tag, MPI_COMM_WORLD);
-    // printf("[MPI process %d] I have sent a to top rank. \n", rank);
-
-    MPI_Recv(&b, 1, MPI_INT, rank_bottom, tag, MPI_COMM_WORLD, &status);
-    // printf("[MPI process %d] I have received from bottom rank. \n", rank);
-    for (i = 0; i < DOMAINSIZE; i++)
-    {
-        data[i + (DOMAINSIZE-1) * DOMAINSIZE] += b;
-        // printf("%.1f ", data[i + (DOMAINSIZE - 1) * DOMAINSIZE]);
-    }
-
+    MPI_Send(&data[1], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD);
     //  to the bottom
-    MPI_Send(&a, 1, MPI_INT, rank_bottom, tag, MPI_COMM_WORLD);
-    // printf("[MPI process %d] I have sent a to bottom rank. \n", rank);
-
-    MPI_Recv(&b, 1, MPI_INT, rank_top, tag, MPI_COMM_WORLD, &status);
-    // printf("[MPI process %d] I have received from top rank. \n", rank);
-    for (i = 0; i < DOMAINSIZE; i++)
-    {
-        data[i] -= b;
-        // printf("%.1f ", data[i + 0 * DOMAINSIZE]);
-    }
-
+    MPI_Send(&data[DOMAINSIZE*(DOMAINSIZE-1)+1], 1, data_ghost_row, rank_bottom, tag, MPI_COMM_WORLD);
     //  to the left
-    MPI_Send(&c, 1, MPI_INT, rank_left, tag, MPI_COMM_WORLD);
-    // printf("[MPI process %d] I have sent a to left rank. \n", rank);
-
-    MPI_Recv(&b, 1, MPI_INT, rank_right, tag, MPI_COMM_WORLD, &status);
-    // printf("[MPI process %d] I have received a from right rank. \n", rank);
-    for (i = 0; i < DOMAINSIZE; i++)
-    {
-        data[i * DOMAINSIZE-1] += b;
-        // printf("%.1f ", data[i * DOMAINSIZE]);
-    }
-
+    MPI_Send(&data[DOMAINSIZE], 1, data_ghost_col, rank_left, tag, MPI_COMM_WORLD);
     //  to the right
-    MPI_Send(&c, 1, MPI_INT, rank_right, tag, MPI_COMM_WORLD);
-    // printf("[MPI process %d] I have sent a to right rank. \n", rank);
+    MPI_Send(&data[DOMAINSIZE*2-1], 1, data_ghost_col, rank_right, tag, MPI_COMM_WORLD);
 
-    MPI_Recv(&b, 1, MPI_INT, rank_left, tag, MPI_COMM_WORLD, &status);
-    // printf("[MPI process %d] I have received a from left rank. \n", rank);
-    for (i = 0; i < DOMAINSIZE; i++)
-    {
-        data[i * DOMAINSIZE] -= b;
-        // printf("%.1f ", data[DOMAINSIZE + i * DOMAINSIZE]);
-    }
+    // from bottom
+    MPI_Recv(&data[DOMAINSIZE*(DOMAINSIZE-1)+1], 1, data_ghost_row, rank_bottom, tag, MPI_COMM_WORLD, &status);
+    // from top
+    MPI_Recv(&data[1], 1, data_ghost_row, rank_top, tag, MPI_COMM_WORLD, &status);
+    // from right
+    MPI_Recv(&data[DOMAINSIZE*2-1], 1, data_ghost_col, rank_right, tag, MPI_COMM_WORLD, &status);
+    // from left
+    MPI_Recv(&data[DOMAINSIZE], 1, data_ghost_col, rank_left, tag, MPI_COMM_WORLD, &status);
 
     if (rank == 9)
     {
@@ -190,10 +180,16 @@ int main(int argc, char *argv[])
     }
 
     // Free MPI resources (e.g., types and communicators)
-    // TODO
+    MPI_Type_free(&data_ghost_row);
+    MPI_Type_free(&data_ghost_col);
+    MPI_Comm_free(&new_communicator);
 
     // Finalize MPI
-    MPI_Finalize();
+    ierr = MPI_Finalize();
+    if (ierr != MPI_SUCCESS) {
+        fprintf(stderr, "Error finalizing MPI.\n");
+        exit(1);
+    }
 
     return 0;
 }
