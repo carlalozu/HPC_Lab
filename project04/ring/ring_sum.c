@@ -33,16 +33,9 @@ int main(int argc, char *argv[])
       out_msg = rank;
     }
 
-    if ((rank % 2) != 0)
-    {
-      MPI_Recv(&in_msg, 1, MPI_INT, rank_source, 0, MPI_COMM_WORLD, &status);
-      MPI_Send(&out_msg, 1, MPI_INT, rank_dest, 0, MPI_COMM_WORLD);
-    }
-    else
-    {
-      MPI_Send(&out_msg, 1, MPI_INT, rank_dest, 0, MPI_COMM_WORLD);
-      MPI_Recv(&in_msg, 1, MPI_INT, rank_source, 0, MPI_COMM_WORLD, &status);
-    }
+    MPI_Send(&out_msg, 1, MPI_INT, rank_dest, 0, MPI_COMM_WORLD);
+    MPI_Recv(&in_msg, 1, MPI_INT, rank_source, 0, MPI_COMM_WORLD, &status);
+
     sum = sum + in_msg;
     out_msg = in_msg;
   }
