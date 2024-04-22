@@ -22,6 +22,8 @@ int main(int argc, char** argv) {
 	// Initialize MPI
 	MPI_Init(&argc, &argv);
 	int mpi_rank, mpi_size;
+	int tag = 0;
+    MPI_Request request;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
@@ -35,7 +37,7 @@ int main(int argc, char** argv) {
 	Domain d = createDomain(p); 
 
 	if(mpi_rank == 0) printf("Processor grid size (%d, %d)\n", p.nx, p.ny);
-	printf("[Process %d]: Coordinates [%d, %d]\n", mpi_rank, p.x, p.y);
+	printf("[Process %d] Coordinates [%d, %d]\n", mpi_rank, p.x, p.y);
 
     printf("[Process %d] Domain X: %d -> %d\n", mpi_rank, d.startx, d.endx);
     printf("[Process %d] Domain Y: %d -> %d\n", mpi_rank, d.starty, d.endy);
@@ -105,24 +107,37 @@ int main(int argc, char** argv) {
 	}
 	unsigned long nTimeEnd = get_time ();
 
-	printf ("[Process %d] Total time: %g ms\n", mpi_rank, (nTimeEnd - nTimeStart) / 1000.0);
+	printf ("[Process %d] Total time:        %g ms\n", mpi_rank, (nTimeEnd - nTimeStart) / 1000.0);
 	printf ("[Process %d] Image size: %ld x %ld = %ld Pixels\n", mpi_rank, (long) d.nx, (long) d.ny, (long) (d.nx * d.ny));
 	printf ("[Process %d] Total number of iterations: %ld\n", mpi_rank, nTotalIterationsCount);
 	printf ("[Process %d] Avg. time per pixel: %g µs\n", mpi_rank, (nTimeEnd - nTimeStart) / (double) (d.nx * d.ny));
 	printf ("[Process %d] Avg. time per iteration: %g µs\n", mpi_rank, (nTimeEnd - nTimeStart) / (double) nTotalIterationsCount);
 	printf ("[Process %d] Iterations/second: %g\n", mpi_rank, nTotalIterationsCount / (double) (nTimeEnd - nTimeStart) * 1e6);
 	// assume there are 8 floating point operations per iteration
-	printf ("[Process %d] MFlop/s:                    %g\n", mpi_rank, nTotalIterationsCount * 8.0 / (double) (nTimeEnd - nTimeStart));
+	printf ("[Process %d] MFlop/s:           %g\n", mpi_rank, nTotalIterationsCount * 8.0 / (double) (nTimeEnd - nTimeStart));
+
+	// Define vectordatatype
+	int size_i = d.nx * d.ny;
+	MPI_Datatype local_domain;
+	MPI_Type_contiguous(size_i, MPI_INT, &local_domain);
+	MPI_Type_commit(&local_domain);
+
+	MPI_Datatype block;
+	MPI_Type_vector(d.ny, d.nx, IMAGE_WIDTH-d.nx, MPI_INT, &block);
+	MPI_Type_commit(&block);
 
 	// Send the data to the master
 	if (mpi_rank != 0)
 	{
-		// TODO: send local partition c to the master process
+		// send local partition c to the master process
+		MPI_Send(&c[0], 1, local_domain, 0, tag, MPI_COMM_WORLD);
+
 	}
 	/****************************************************************************/
 	// Write the image
 	if (mpi_rank == 0)
 	{
+		MPI_Request* requests = malloc((mpi_size-1) * sizeof(MPI_Request));
 		// first write master's own data
 		for (j = 0; j < d.ny; j++) // HEIGHT
 		{
@@ -139,24 +154,29 @@ int main(int argc, char** argv) {
 			Partition p1 = updatePartition(p, proc);
 			Domain d1 = createDomain(p1);
 
-			// TODO: receive partition of the process proc into array c (overwrite its data)
-
+			// TODO: receive partition of the process proc into array c
+			// (overwrite its data)
+			MPI_Irecv(&c[index(0,0,d1.nx)], 1, block, proc, tag, MPI_COMM_WORLD, &requests[proc-1]);
+			printf ("[Process %d] nx:       %d\n", mpi_rank, d1.nx);
 			// write the partition of the process proc
 			for (j = 0; j < d1.ny; j++) // HEIGHT
 			{
 				for (i = 0; i < d1.nx; i++) // WIDTH
 				{
 					int c_ij = c[index(i,j,d1.nx)];
+
 					png_plot (pPng, i+d1.startx, j+d1.starty, c_ij ,c_ij, c_ij);
 				}
 			}
 		}
 
+		MPI_Waitall(mpi_size-1, requests, MPI_STATUSES_IGNORE);
 		png_write (pPng, "mandel.png");
+		free(requests);
 	}
 
-	//TODO: uncomment after you implement createPartition(int mpi_rank, int mpi_size)
-	//MPI_Comm_free(&p.comm);
+	//uncomment after you implement createPartition(int mpi_rank, int mpi_size)
+	MPI_Comm_free(&p.comm);
 	free(c);
 	MPI_Finalize();
 	return 0;
