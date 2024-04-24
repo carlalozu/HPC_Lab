@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 	MPI_Init(&argc, &argv);
 	int mpi_rank, mpi_size;
 	int tag = 0;
-    MPI_Request request;
+	MPI_Status status;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
@@ -116,15 +116,10 @@ int main(int argc, char** argv) {
 	// assume there are 8 floating point operations per iteration
 	printf ("[Process %d] MFlop/s:           %g\n", mpi_rank, nTotalIterationsCount * 8.0 / (double) (nTimeEnd - nTimeStart));
 
-	// Define vectordatatype
-	int size_i = d.nx * d.ny;
+	// Define vector datatype
 	MPI_Datatype local_domain;
-	MPI_Type_contiguous(size_i, MPI_INT, &local_domain);
+	MPI_Type_contiguous(d.nx * d.ny, MPI_INT, &local_domain);
 	MPI_Type_commit(&local_domain);
-
-	MPI_Datatype block;
-	MPI_Type_vector(d.ny, d.nx, IMAGE_WIDTH-d.nx, MPI_INT, &block);
-	MPI_Type_commit(&block);
 
 	// Send the data to the master
 	if (mpi_rank != 0)
@@ -137,7 +132,6 @@ int main(int argc, char** argv) {
 	// Write the image
 	if (mpi_rank == 0)
 	{
-		MPI_Request* requests = malloc((mpi_size-1) * sizeof(MPI_Request));
 		// first write master's own data
 		for (j = 0; j < d.ny; j++) // HEIGHT
 		{
@@ -156,8 +150,8 @@ int main(int argc, char** argv) {
 
 			// TODO: receive partition of the process proc into array c
 			// (overwrite its data)
-			MPI_Irecv(&c[index(0,0,d1.nx)], 1, block, proc, tag, MPI_COMM_WORLD, &requests[proc-1]);
-			printf ("[Process %d] nx:       %d\n", mpi_rank, d1.nx);
+			MPI_Recv(&c[0], 1, local_domain, proc, tag, MPI_COMM_WORLD, &status);
+			
 			// write the partition of the process proc
 			for (j = 0; j < d1.ny; j++) // HEIGHT
 			{
@@ -170,9 +164,7 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		MPI_Waitall(mpi_size-1, requests, MPI_STATUSES_IGNORE);
 		png_write (pPng, "mandel.png");
-		free(requests);
 	}
 
 	//uncomment after you implement createPartition(int mpi_rank, int mpi_size)
