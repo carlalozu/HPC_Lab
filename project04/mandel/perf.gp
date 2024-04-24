@@ -1,5 +1,7 @@
-set terminal postscript color
-set output "perf.ps"
+set term pdf size 12cm,8cm
+set output 'perf.pdf'
+set encoding utf8
+
 set style line 1 linetype 2
 set style line 2 linetype 3
 set style line 3 linetype 1

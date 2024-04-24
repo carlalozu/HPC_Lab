@@ -8,6 +8,11 @@
 #SBATCH --error=job.err
 #SBATCH --time=01:20:00
 
+module load gcc openmpi
+
+make clean
+make 
+
 #offset added to x coordinate so that gnuplot does not overlap the bars
 offset=0 
 
@@ -19,7 +24,7 @@ do
 
     for i in `seq 0 $((np-1))`
     do
-        t=$(cat tmp.txt | grep "\[Process $i\] Total time" | cut -d ":" -f2 | cut -d " " -f2)
+        t=$(cat tmp.txt | grep "\[Process $i\] Total time" | cut -d ":" -f2)
         idx=$(echo $i + $offset | bc -l)
         printf "$np $idx $t \n" >> perf.data
     done
