@@ -20,21 +20,15 @@ int main(int argc, char *argv[])
   for (i = 0; i < size; i++)
   {
 
-    rank_source = rank - 1;
-    if (rank == 0)
-      rank_source = size - 1;
-
-    rank_dest = rank + 1;
-    if (rank == size - 1)
-      rank_dest = 0;
+    rank_source = (rank + size - 1) % size;
+    rank_dest = (rank + 1) % size;
 
     if (i == 0)
     {
       out_msg = rank;
     }
 
-    MPI_Send(&out_msg, 1, MPI_INT, rank_dest, 0, MPI_COMM_WORLD);
-    MPI_Recv(&in_msg, 1, MPI_INT, rank_source, 0, MPI_COMM_WORLD, &status);
+    MPI_Sendrecv(&out_msg, 1, MPI_INT, rank_dest, 0, &in_msg, 1, MPI_INT, rank_source, 0, MPI_COMM_WORLD, &status);
 
     sum = sum + in_msg;
     out_msg = in_msg;
