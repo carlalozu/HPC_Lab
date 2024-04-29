@@ -15,10 +15,6 @@ module load gcc openmpi
 make clean
 make
 
-# Create results file
-# > results_strong.txt
-# echo "threads,nx,nt,iters_cg,iters_newton,timespent" | tee -a results_strong.txt
-
 for ((i=0; i<7; i++)) do
     N=$((2**i)) # Set number of OpenMP threads
     echo "Running with $N threads"
