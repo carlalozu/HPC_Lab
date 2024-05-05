@@ -45,6 +45,7 @@ void cg_init(int nx, int ny) {
 
 // computes the inner product of x and y
 // x and y are vectors on length N
+// NOTE: parallelize this
 double hpc_dot(Field const& x, Field const& y) {
     double result = 0;
     int N = y.length();
@@ -58,6 +59,7 @@ double hpc_dot(Field const& x, Field const& y) {
 
 // computes the 2-norm of x
 // x is a vector on length N
+// NOTE: parallelize this
 double hpc_norm2(Field const& x) {
     double result = 0;
     int N = x.length();
@@ -96,6 +98,7 @@ void hpc_axpy(Field& y, const double alpha, Field const& x) {
 // computes y = x + alpha*(l-r)
 // y, x, l and r are vectors of length N
 // alpha is a scalar
+// NOTE: parallelize this
 void hpc_add_scaled_diff(Field& y, Field const& x, const double alpha,
                          Field const& l, Field const& r) {
     int N = y.length();
@@ -107,6 +110,7 @@ void hpc_add_scaled_diff(Field& y, Field const& x, const double alpha,
 // computes y = alpha*(l-r)
 // y, l and r are vectors of length N
 // alpha is a scalar
+// NOTE: parallelize this
 void hpc_scaled_diff(Field& y, const double alpha,
     Field const& l, Field const& r)
 {

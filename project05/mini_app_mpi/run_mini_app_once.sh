@@ -13,7 +13,7 @@ module load gcc openmpi
 
 # Compile
 make clean
-make main
+make
 
 # Create results file
 > output.txt

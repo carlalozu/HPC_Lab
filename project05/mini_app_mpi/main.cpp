@@ -34,19 +34,63 @@ using namespace stats;
 
 // =============================================================================
 void write_binary(std::string fname, Field &u, SubDomain &domain,
-                  Discretization &options) {
-    // TODO: Implement output with MPI-IO
-    FILE* output = fopen(fname.c_str(), "w");
+                  Discretization &options)
+{
+    FILE *output = fopen(fname.c_str(), "w");
     fwrite(u.data(), sizeof(double), options.nx * options.nx, output);
     fclose(output);
 }
 
+// Implement output with MPI-IO
+void write_binary(char fname[], Discretization &domain, SubDomain &subdomain,
+                  Field &data)
+{
+    // Generate *.bin file name
+    char *fname_bin = (char *)malloc((strlen(fname) + 1 + 4) * sizeof(char));
+    strcpy(fname_bin, fname);
+    strcat(fname_bin, ".bin");
+
+    // Open file
+    MPI_File filehandle;
+    MPI_File_open(MPI_COMM_WORLD, fname_bin, MPI_MODE_CREATE | MPI_MODE_WRONLY,
+                  MPI_INFO_NULL, &filehandle);
+
+    // Create sub-array type (each process writes its sub-domain part into the
+    // file containing (full!) domain)
+    // Note the row-major order storage format (C order)
+    int sizes[2] = {domain.nx, domain.nx};
+    int subsizes[2] = {subdomain.nx, subdomain.ny};
+    int start[2] = {subdomain.startx - 1, subdomain.starty - 1};
+    MPI_Datatype filetype;
+    MPI_Type_create_subarray(2, sizes, subsizes, start, MPI_ORDER_C, MPI_DOUBLE,
+                             &filetype);
+    MPI_Type_commit(&filetype);
+
+    // Set view and write file
+    MPI_Offset disp = 0;
+    MPI_File_set_view(filehandle, disp, MPI_DOUBLE, filetype, "native",
+                      MPI_INFO_NULL);
+    MPI_File_write_all(filehandle, data.data(), subdomain.nx * subdomain.nx, MPI_DOUBLE,
+                       MPI_STATUS_IGNORE);
+
+    // Free file type
+    MPI_Type_free(&filetype);
+
+    // Close file
+    MPI_File_close(&filehandle);
+
+    // Free
+    free(fname_bin);
+ }
+
 // read command line arguments
-void readcmdline(Discretization& options, int argc, char* argv[]) {
-    if (argc<4 || argc>5) {
+void readcmdline(Discretization &options, int argc, char *argv[])
+{
+    if (argc < 4 || argc > 5)
+    {
         std::cerr << "Usage: main nx nt t verbose\n";
         std::cerr << "  nx      number of grid points in x-direction and "
-                               "y-direction, respectively\n";
+                     "y-direction, respectively\n";
         std::cerr << "  nt      number of time steps\n";
         std::cerr << "  t       total time\n";
         std::cerr << "  verbose (optional) verbose output\n";
@@ -55,29 +99,33 @@ void readcmdline(Discretization& options, int argc, char* argv[]) {
 
     // read nx
     options.nx = atoi(argv[1]);
-    if (options.nx < 1) {
+    if (options.nx < 1)
+    {
         std::cerr << "nx must be positive integer\n";
         exit(-1);
     }
 
     // read nt
     options.nt = atoi(argv[2]);
-    if (options.nt < 1) {
+    if (options.nt < 1)
+    {
         std::cerr << "nt must be positive integer\n";
         exit(-1);
     }
 
     // read total time
     double t = atof(argv[3]);
-    if (t < 0) {
+    if (t < 0)
+    {
         std::cerr << "t must be positive real value\n";
         exit(-1);
     }
 
     // set verbosity if requested
     verbose_output = false;
-    if (argc==5) {
-        verbose_output = (domain.rank==0);
+    if (argc == 5)
+    {
+        verbose_output = (domain.rank == 0);
     }
 
     // set total number of grid points
@@ -96,55 +144,58 @@ void readcmdline(Discretization& options, int argc, char* argv[]) {
 
     // set beta, assume diffusion coefficient D=1, reaction coefficient R=1000
     double R = 500.;
-    options.beta = (R * options.dx * options.dx)/D;
+    options.beta = (R * options.dx * options.dx) / D;
 }
 
 // =============================================================================
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
     // read command line arguments
     readcmdline(options, argc, argv);
 
     // set iteration parameters
-    int max_cg_iters     = 300;
+    int max_cg_iters = 300;
     int max_newton_iters = 50;
-    double tolerance     = 1.e-6;
+    double tolerance = 1.e-6;
 
     // initialize MPI
     int size = 1, rank = 0;
-    
+
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    // TODO: initialize sub-domain (data.{h,cpp})
+    // Initialize sub-domain (data.{h,cpp})
     domain.init(rank, size, options);
-    // domain.print(); // for debugging
+    domain.print(); // for debugging
     int nx = domain.nx;
     int ny = domain.ny;
-    int N  = domain.N;
-    int nt  = options.nt;
-
+    int N = domain.N;
+    int nt = options.nt;
 
     int print_message = 0;
-    if (rank == 0){
+    if (rank == 0)
+    {
         print_message = 1;
     }
 
-    if (print_message){
+    if (print_message)
+    {
         std::cout << std::string(80, '=') << std::endl;
         std::cout << "                      Welcome to mini-stencil!" << std::endl;
 
         std::cout << "version   :: C++ MPI" << std::endl;
-        std::cout << "processes :: "<< size  << std::endl;
+        std::cout << "processes :: " << size << std::endl;
 
         std::cout << "mesh      :: " << options.nx << " * " << options.nx
-                                    << " dx = " << options.dx << std::endl;
+                  << " dx = " << options.dx << std::endl;
         std::cout << "time      :: " << nt << " time steps from 0 .. "
-                                        << options.nt*options.dt << std::endl;
-        std::cout << "iteration :: " << "CG "          << max_cg_iters
-                                    << ", Newton "    << max_newton_iters
-                                    << ", tolerance " << tolerance << std::endl;
+                  << options.nt * options.dt << std::endl;
+        std::cout << "iteration :: "
+                  << "CG " << max_cg_iters
+                  << ", Newton " << max_newton_iters
+                  << ", tolerance " << tolerance << std::endl;
         std::cout << std::string(80, '=') << std::endl;
     }
 
@@ -160,8 +211,8 @@ int main(int argc, char* argv[]) {
     buffE.init(ny, 1);
     buffW.init(ny, 1);
 
-    Field f(nx,ny);
-    Field deltay(nx,ny);
+    Field f(nx, ny);
+    Field deltay(nx, ny);
 
     // set Dirichlet boundary conditions to 0.1 all around
     double bdy_value = 0.1;
@@ -179,12 +230,15 @@ int main(int argc, char* argv[]) {
     double xc = 1.0 / 4.0;
     double yc = 1.0 / 4.0;
     double radius = std::min(xc, yc) / 2.0;
-    for (int j = domain.starty-1; j < domain.endy; j++) {
+    for (int j = domain.starty - 1; j < domain.endy; j++)
+    {
         double y = (j - 1) * options.dx;
-        for (int i = domain.startx-1; i < domain.endx; i++) {
+        for (int i = domain.startx - 1; i < domain.endx; i++)
+        {
             double x = (i - 1) * options.dx;
-            if ((x - xc) * (x - xc) + (y - yc) * (y - yc) < radius * radius) {
-                y_new(i-domain.startx+1,j-domain.starty+1) = inner_circle;
+            if ((x - xc) * (x - xc) + (y - yc) * (y - yc) < radius * radius)
+            {
+                y_new(i - domain.startx + 1, j - domain.starty + 1) = inner_circle;
             }
         }
     }
@@ -196,20 +250,57 @@ int main(int argc, char* argv[]) {
     double time_start = walltime();
 
     // main time loop
-    for (int timestep = 1; timestep <= nt; timestep++) {
+    for (int timestep = 1; timestep <= nt; timestep++)
+    {
         // set y_new and y_old to be the solution
         hpc_copy(y_old, y_new);
+
+        // Fill buffers
+        for (int k = 0; k < nx; k++)
+        {
+            buffN(k,0) = y_new(k,0);
+            buffS(k,0) = y_new(k,nx-1);
+            buffE(k,0) = y_new(0,k);
+            buffW(k,0) = y_new(nx-1,k);
+        }
+
+        // TODO: exchange the ghost cells using non-blocking point-to-point
+        //       communication
+        MPI_Request request[8];
+        int tag1 = 1, tag2 = 2, tag3 = 3, tag4= 4;
+        
+        // SEND
+        //  to top
+        MPI_Isend(buffN.data(), nx, MPI_DOUBLE, domain.neighbour_north, tag1, MPI_COMM_WORLD, &request[0]);
+        //  to bottom
+        MPI_Isend(buffS.data(), nx, MPI_DOUBLE, domain.neighbour_south, tag2, MPI_COMM_WORLD, &request[1]);
+        //  to right
+        MPI_Isend(buffE.data(), ny, MPI_DOUBLE, domain.neighbour_east, tag3, MPI_COMM_WORLD, &request[2]);
+        //  to left
+        MPI_Isend(buffW.data(), ny, MPI_DOUBLE, domain.neighbour_west, tag4, MPI_COMM_WORLD, &request[3]);
+
+        // RECEIVE
+        // from top
+        MPI_Irecv(bndN.data(), nx, MPI_DOUBLE, domain.neighbour_north, tag2, MPI_COMM_WORLD, &request[4]);
+        // from bottom
+        MPI_Irecv(bndS.data(), nx, MPI_DOUBLE, domain.neighbour_south, tag1, MPI_COMM_WORLD, &request[5]);
+        // from right
+        MPI_Irecv(bndE.data(), ny, MPI_DOUBLE, domain.neighbour_east, tag4, MPI_COMM_WORLD, &request[6]);
+        // from left
+        MPI_Irecv(bndW.data(), ny, MPI_DOUBLE, domain.neighbour_west, tag3, MPI_COMM_WORLD, &request[7]);
 
         double residual;
         bool converged = false;
         int it;
-        for (it = 0; it < max_newton_iters; it++) {
+        for (it = 0; it < max_newton_iters; it++)
+        {
             // compute residual
             diffusion(y_old, y_new, f);
             residual = hpc_norm2(f);
 
             // check for convergence
-            if (residual < tolerance) {
+            if (residual < tolerance)
+            {
                 converged = true;
                 break;
             }
@@ -220,23 +311,27 @@ int main(int argc, char* argv[]) {
                    cg_converged);
 
             // check that the CG solver converged
-            if (!cg_converged) break;
+            if (!cg_converged)
+                break;
 
             // update solution
             hpc_axpy(y_new, -1.0, deltay);
         }
-        iters_newton += it+1;
+        iters_newton += it + 1;
 
         // output some statistics
-        if (converged && verbose_output) {
+        if (converged && verbose_output)
+        {
             std::cout << "step " << timestep
                       << " required " << it
                       << " iterations for residual " << residual
                       << std::endl;
         }
-        if (!converged) {
+        if (!converged)
+        {
             std::cerr << "step " << timestep
-                      << " ERROR : nonlinear iterations failed to converge" << std::endl;;
+                      << " ERROR : nonlinear iterations failed to converge" << std::endl;
+            ;
             break;
         }
     }
@@ -249,14 +344,16 @@ int main(int argc, char* argv[]) {
     ////////////////////////////////////////////////////////////////////
 
     // binary data
-    // TODO: Implement write_binary using MPI-IO
-    write_binary("output.bin", y_old, domain, options);
+    // write_binary("output.bin", y_old, domain, options);
+    // Implement write_binary using MPI-IO
+    write_binary("output", options, domain, y_old);
 
     // metadata
     // Only once process should do the following
-    if (print_message){
+    if (print_message)
+    {
         std::ofstream fid("output.bov");
-        fid << "TIME: " << options.nt*options.dt << std::endl;
+        fid << "TIME: " << options.nt * options.dt << std::endl;
         fid << "DATA_FILE: output.bin" << std::endl;
         fid << "DATA_SIZE: " << options.nx << " " << options.nx << " 1"
             << std::endl;
@@ -264,35 +361,37 @@ int main(int argc, char* argv[]) {
         fid << "VARIABLE: phi" << std::endl;
         fid << "DATA_ENDIAN: LITTLE" << std::endl;
         fid << "CENTERING: nodal" << std::endl;
-        fid << "BRICK_ORIGIN: " << "0. 0. 0." << std::endl;
-        fid << "BRICK_SIZE: " << (options.nx-1)*options.dx << ' '
-                              << (options.nx-1)*options.dx << ' '
-                              << " 1.0"
+        fid << "BRICK_ORIGIN: "
+            << "0. 0. 0." << std::endl;
+        fid << "BRICK_SIZE: " << (options.nx - 1) * options.dx << ' '
+            << (options.nx - 1) * options.dx << ' '
+            << " 1.0"
             << std::endl;
     }
 
     // print table summarizing results
     double timespent = time_end - time_start;
-    // TODO: Only once process should do the following
-    if (print_message){
+    if (print_message)
+    {
         std::cout << std::string(80, '-') << std::endl;
         std::cout << "simulation took " << timespent << " seconds" << std::endl;
         std::cout << int(iters_cg)
                   << " conjugate gradient iterations, at rate of "
-                  << float(iters_cg)/timespent << " iters/second" << std::endl;
+                  << float(iters_cg) / timespent << " iters/second" << std::endl;
         std::cout << iters_newton << " newton iterations" << std::endl;
         std::cout << std::string(80, '-') << std::endl;
         std::cout << "### " << size << ", "
-                            << options.nx << ", "
-                            << options.nt << ", "
-                            << iters_cg   << ", "
-                            << iters_newton <<  ", "
-                            << timespent
+                  << options.nx << ", "
+                  << options.nt << ", "
+                  << iters_cg << ", "
+                  << iters_newton << ", "
+                  << timespent
                   << " ###" << std::endl;
         std::cout << "Goodbye!" << std::endl;
     }
 
     // finalize MPI
+    MPI_Comm_free(&domain.comm_cart);
     MPI_Finalize();
 
     return 0;

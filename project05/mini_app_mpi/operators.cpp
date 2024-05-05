@@ -38,9 +38,6 @@ void diffusion(data::Field const& s_old, data::Field const& s_new,
     int iend  = nx - 1;
     int jend  = ny - 1;
 
-    // TODO: exchange the ghost cells using non-blocking point-to-point
-    //       communication
-
     // the interior grid points
     for (int j=1; j < jend; j++) {
         for (int i=1; i < iend; i++) {
