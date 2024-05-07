@@ -53,7 +53,7 @@ double hpc_dot(Field const& x, Field const& y) {
     for (int i = 0; i < N; i++) {
         local_result += x[i] * y[i];
     }
-    MPI_Allreduce(&local_result, &global_result, 1, MPI_DOUBLE, MPI_SUM, data::domain.comm_cart);
+    MPI_Allreduce(&local_result, &global_result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return global_result;
 }
 
@@ -69,7 +69,7 @@ double hpc_norm2(Field const& x) {
         local_result += x[i] * x[i];
     }
     local_result = sqrt(local_result);
-    MPI_Allreduce(&local_result, &global_result, 1, MPI_DOUBLE, MPI_SUM, data::domain.comm_cart);
+    MPI_Allreduce(&local_result, &global_result, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
     return global_result;
 }
