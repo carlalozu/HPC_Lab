@@ -74,6 +74,13 @@ void SubDomain::init(int mpi_rank, int mpi_size,
     ny = discretization.nx / ndomy;
     startx = (domx-1)*nx+1;
     starty = (domy-1)*ny+1;
+
+    // adjust for the remainder
+    if( domx == ndomx )
+        nx = discretization.nx - startx + 1;
+    if( domy == ndomy )
+        ny = discretization.nx - starty + 1;
+
     endx = startx + nx -1;
     endy = starty + ny -1;
 
