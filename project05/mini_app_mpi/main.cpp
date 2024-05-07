@@ -62,7 +62,7 @@ void write_binary(char fname[], Discretization &domain, SubDomain &subdomain,
     int subsizes[2] = {subdomain.nx, subdomain.ny};
     int start[2] = {subdomain.startx - 1, subdomain.starty - 1};
     MPI_Datatype filetype;
-    MPI_Type_create_subarray(2, sizes, subsizes, start, MPI_ORDER_C, MPI_DOUBLE,
+    MPI_Type_create_subarray(2, sizes, subsizes, start, MPI_ORDER_FORTRAN, MPI_DOUBLE,
                              &filetype);
     MPI_Type_commit(&filetype);
 
@@ -70,7 +70,7 @@ void write_binary(char fname[], Discretization &domain, SubDomain &subdomain,
     MPI_Offset disp = 0;
     MPI_File_set_view(filehandle, disp, MPI_DOUBLE, filetype, "native",
                       MPI_INFO_NULL);
-    MPI_File_write_all(filehandle, data.data(), subdomain.nx * subdomain.nx, MPI_DOUBLE,
+    MPI_File_write_all(filehandle, data.data(), subdomain.nx * subdomain.ny, MPI_DOUBLE,
                        MPI_STATUS_IGNORE);
 
     // Free file type
@@ -254,40 +254,6 @@ int main(int argc, char *argv[])
     {
         // set y_new and y_old to be the solution
         hpc_copy(y_old, y_new);
-
-        // Fill buffers
-        for (int k = 0; k < nx; k++)
-        {
-            buffN(k,0) = y_new(k,0);
-            buffS(k,0) = y_new(k,nx-1);
-            buffE(k,0) = y_new(0,k);
-            buffW(k,0) = y_new(nx-1,k);
-        }
-
-        // TODO: exchange the ghost cells using non-blocking point-to-point
-        //       communication
-        MPI_Request request[8];
-        int tag1 = 1, tag2 = 2, tag3 = 3, tag4= 4;
-        
-        // SEND
-        //  to top
-        MPI_Isend(buffN.data(), nx, MPI_DOUBLE, domain.neighbour_north, tag1, MPI_COMM_WORLD, &request[0]);
-        //  to bottom
-        MPI_Isend(buffS.data(), nx, MPI_DOUBLE, domain.neighbour_south, tag2, MPI_COMM_WORLD, &request[1]);
-        //  to right
-        MPI_Isend(buffE.data(), ny, MPI_DOUBLE, domain.neighbour_east, tag3, MPI_COMM_WORLD, &request[2]);
-        //  to left
-        MPI_Isend(buffW.data(), ny, MPI_DOUBLE, domain.neighbour_west, tag4, MPI_COMM_WORLD, &request[3]);
-
-        // RECEIVE
-        // from top
-        MPI_Irecv(bndN.data(), nx, MPI_DOUBLE, domain.neighbour_north, tag2, MPI_COMM_WORLD, &request[4]);
-        // from bottom
-        MPI_Irecv(bndS.data(), nx, MPI_DOUBLE, domain.neighbour_south, tag1, MPI_COMM_WORLD, &request[5]);
-        // from right
-        MPI_Irecv(bndE.data(), ny, MPI_DOUBLE, domain.neighbour_east, tag4, MPI_COMM_WORLD, &request[6]);
-        // from left
-        MPI_Irecv(bndW.data(), ny, MPI_DOUBLE, domain.neighbour_west, tag3, MPI_COMM_WORLD, &request[7]);
 
         double residual;
         bool converged = false;
