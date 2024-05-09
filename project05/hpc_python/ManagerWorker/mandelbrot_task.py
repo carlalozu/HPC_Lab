@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class mandelbrot():
+class Mandelbrot():
     """
     Mandelbrot task creator and collector.
 
@@ -53,7 +53,7 @@ class mandelbrot():
             j_start = 0
             ny_local = self._ny_global
             y_start = self._y_min
-            tasks += [mandelbrot_patch(i_start, nx_local, x_start, dx,
+            tasks += [Mandelbrot_patch(i_start, nx_local, x_start, dx,
                                        j_start, ny_local, y_start, dy, 100)]
         return tasks
 
@@ -79,7 +79,7 @@ class mandelbrot():
         return mandelbrot_set
 
 
-class mandelbrot_patch():
+class Mandelbrot_patch():
     """
     Class for computing and representing a Mandelbrot (sub)set/patch.
 
@@ -119,13 +119,14 @@ class mandelbrot_patch():
 
     def do_work(self):
         """Compute Mandelbrot (sub)set/patch."""
+        print("Computing...")
         x = self._x_start + np.arange(self._nx_local)*self._dx
         y = self._y_start + np.arange(self._ny_local)*self._dy
         c = x[:, np.newaxis] + 1j*y[np.newaxis, :]
         z = np.zeros_like(c)
         mask = np.full_like(c, fill_value=True, dtype=bool)
         z[mask] = c[mask]
-        for k in range(self._Nmax):
+        for _ in range(self._Nmax):
             z[mask] = z[mask]**2 + c[mask]
             mask[np.abs(z) > 2.] = False
         self._patch = np.abs(z) <= 2.
@@ -140,7 +141,7 @@ def main():
     y_max = +1.5
     ny = 301
     ntasks = 33
-    M = mandelbrot(x_min, x_max, nx, y_min, y_max, ny, ntasks)
+    M = Mandelbrot(x_min, x_max, nx, y_min, y_max, ny, ntasks)
     tasks = M.get_tasks()
     for task in tasks:
         task.do_work()

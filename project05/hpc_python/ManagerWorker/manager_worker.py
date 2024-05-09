@@ -15,8 +15,10 @@ TAG_TASK = 1  # task       message tag
 TAG_TASK_DONE = 2  # tasks done message tag
 TAG_DONE = 3  # done       message tag
 
+VERBOSE = False
 
-def manager(comm, tasks):
+
+def manager(comm, tasks, TasksDoneByWorker):
     """
     The manager.
 
@@ -24,15 +26,53 @@ def manager(comm, tasks):
     ----------
     comm : mpi4py.MPI communicator
         MPI communicator
-    tasks : list of objects with a do_task() method perfroming the task
+    tasks : list of objects with a do_task() method performing the task
         List of tasks to accomplish
 
     Returns
     -------
     ... ToDo ...
     """
+    print("Initializing manager")
+    ntasks = len(tasks)
+    nworkers = comm.Get_size() - 1
+    ntasks_sent = 0
+    ntasks_done = 0
+    task_index = 0
+    tasks_done = 0
+    tasks_done_ = []
+    while ntasks_done < ntasks:
+        # send new tasks
+        while task_index < ntasks and ntasks_sent < nworkers:
+            if VERBOSE:
+                print("Sending tasks")
+            comm.send(tasks[task_index], dest=ntasks_sent + 1, tag=TAG_TASK)
+            ntasks_sent += 1
+            task_index += 1
 
-    pass
+        # receive task done
+        status = MPI.Status()
+        task = comm.recv(source=MPI.ANY_SOURCE,
+                         tag=TAG_TASK_DONE, status=status)
+        tasks_done_.append(task)
+        TasksDoneByWorker[status.source] += 1
+        ntasks_done += 1
+        ntasks_sent -= 1
+
+        # send new task
+        if task_index < ntasks:
+            if VERBOSE:
+                print(f"Sending worker {status.source} a new task")
+            comm.send(tasks[task_index], dest=status.source, tag=TAG_TASK)
+            ntasks_sent += 1
+            task_index += 1
+        # send done
+        else:
+            if VERBOSE:
+                print(
+                    f"All tasks done. Sending worker {status.source} empty task")
+            comm.send(None, dest=status.source, tag=TAG_TASK)
+    return tasks_done_
 
 
 def worker(comm):
@@ -44,7 +84,20 @@ def worker(comm):
     comm : mpi4py.MPI communicator
         MPI communicator
     """
-    pass
+    while True:
+        # receive task
+        task = comm.recv(source=MANAGER, tag=TAG_TASK)
+        if task is None:
+            break
+        if VERBOSE:
+            print(f"Worker {comm.Get_rank()} has received task")
+        # do task
+        task.do_work()
+        if VERBOSE:
+            print(f"Worker {comm.Get_rank()} is done with task")
+        # send task done
+        comm.send(task, dest=MANAGER, tag=TAG_TASK_DONE)
+    print(f"Worker {comm.Get_rank()} is done with all tasks")
 
 
 def readcmdline(rank):
@@ -106,18 +159,25 @@ if __name__ == "__main__":
     # start timer
     timespent = - time.perf_counter()
 
-    # trying out ... YOUR MANAGER-WORKER IMPLEMENTATION HERE ...
     x_min = -2.
     x_max = +1.
     y_min = -1.5
     y_max = +1.5
-    M = mandelbrot(x_min, x_max, nx, y_min, y_max, ny, ntasks)
+    M = Mandelbrot(x_min, x_max, nx, y_min, y_max, ny, ntasks)
     tasks = M.get_tasks()
-    for task in tasks:
-        task.do_work()
-    m = M.combine_tasks(tasks)
-    plt.imshow(m.T, cmap="gray", extent=[x_min, x_max, y_min, y_max])
-    plt.savefig("mandelbrot.png")
+
+    # trying out ... YOUR MANAGER-WORKER IMPLEMENTATION HERE ...
+    if my_rank == MANAGER:
+        tasks_done_ = manager(comm, tasks, TasksDoneByWorker)
+        print("All tasks marked as done")
+    else:
+        worker(comm)
+
+    comm.Barrier()
+    if my_rank == MANAGER:
+        im = M.combine_tasks(tasks_done_)
+        plt.imshow(im.T, cmap="gray", extent=[x_min, x_max, y_min, y_max])
+        plt.savefig("mandelbrot.png")
 
     # stop timer
     timespent += time.perf_counter()
