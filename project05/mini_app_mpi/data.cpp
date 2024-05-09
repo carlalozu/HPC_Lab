@@ -47,27 +47,10 @@ void SubDomain::init(int mpi_rank, int mpi_size,
     domy = coords[0] + 1;
     domx = coords[1] + 1;
 
-    // TODO: set neighbours for all directions using MPI_Cart_shift
-    enum DIRECTIONS
-    {
-        LEFT,
-        RIGHT,
-        UP,
-        DOWN
-    };
-    int neighbours_ranks[4];
+    // set neighbours for all directions using MPI_Cart_shift
 
-    // Let consider dims[0] = X, so the shift tells us our left and right neighbours
-    MPI_Cart_shift(comm_cart, 1, 1, &neighbours_ranks[LEFT], &neighbours_ranks[RIGHT]);
-
-    // Let consider dims[1] = Y, so the shift tells us our up and down neighbours
-    MPI_Cart_shift(comm_cart, 0, 1, &neighbours_ranks[UP], &neighbours_ranks[DOWN]);
-
-    // find your top/bottom/left/right neighbor using the communicator
-    neighbour_west = neighbours_ranks[0];
-    neighbour_east = neighbours_ranks[1];
-    neighbour_north = neighbours_ranks[2];
-    neighbour_south = neighbours_ranks[3];
+    MPI_Cart_shift(comm_cart, 0, 1, &neighbour_south, &neighbour_north);
+    MPI_Cart_shift(comm_cart, 1, 1, &neighbour_west, &neighbour_east);
 
     // get bounding box
     nx = discretization.nx / ndomx;
