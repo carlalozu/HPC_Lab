@@ -1,5 +1,10 @@
 from mpi4py import MPI
 import numpy as np
+from copy import deepcopy
+np.set_printoptions(precision=1)
+
+SUBDOMAIN = 6
+DOMAINSIZE = SUBDOMAIN + 2
 
 # This is to create default communicator and get the rank
 comm = MPI.COMM_WORLD
@@ -27,18 +32,24 @@ print(f"    has coordinates {coords}")
 print(f"    has neighbour west {west} and east {east}")
 print(f"    has neighbour north {north} and south {south} \n")
 
+data = np.empty((DOMAINSIZE, DOMAINSIZE), dtype=np.int32)
+data.fill(rank)
+new_data = data.copy()
+
 # Exchange ranks
-my_neighbours = [west, east, north, south]
-myranks_send = np.array([rank for i in range(4)], dtype=np.int32)
-myranks_recv = np.empty(4, dtype=np.int32)
-recv_rank = np.empty(1, dtype=np.int32)
-tag = 1
+col_east = np.empty(SUBDOMAIN, dtype=np.int32)
+col_west = np.empty(SUBDOMAIN, dtype=np.int32)
 
-# Send data to neighbors and receive data from other neighbors
-for i, j in zip(range(4), [1,0,3,2]):
-    comm.Sendrecv(myranks_send[i], my_neighbours[i], tag, recv_rank, my_neighbours[j])
-    myranks_recv[j] = recv_rank[0]
+# Send and receive
+comm.Sendrecv(data[0,1:-1], north, 1, new_data[DOMAINSIZE-1,1:-1], south, 1)
+comm.Sendrecv(data[DOMAINSIZE-1,1:-1], south, 2, new_data[0,1:-1], north, 2)
+comm.Sendrecv(np.array(data[1:-1,DOMAINSIZE-1].data, dtype=np.int32), east, 4, col_west, west, 4)
+comm.Sendrecv(np.array(data[1:-1,0].data, dtype=np.int32), west, 3, col_east, east, 3)
 
-# Ensure all processes complete communication before printing
+new_data[1:-1, DOMAINSIZE-1] = col_east.data
+new_data[1:-1, 0] = col_west.data
+
+# Wait till done
 comm.Barrier()
-print("Processor", rank, "exchanged ranks (W,E,N,S):", myranks_recv)
+
+print(new_data, "\n")
