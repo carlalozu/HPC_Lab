@@ -1,17 +1,20 @@
+import time
+import sys
+import numpy as np
+from mpi4py import MPI  # MPI_Init and MPI_Finalize automatically called
+import matplotlib.pyplot as plt
 from mandelbrot_task import *
 import matplotlib as mpl
 mpl.use('Agg')
-import matplotlib.pyplot as plt
-from mpi4py import MPI # MPI_Init and MPI_Finalize automatically called
-import numpy as np
-import sys
-import time
+
+### mpirun python3 manager_worker.py 4001 4001 100 ###
 
 # some parameters
 MANAGER = 0       # rank of manager
-TAG_TASK      = 1 # task       message tag
-TAG_TASK_DONE = 2 # tasks done message tag
-TAG_DONE      = 3 # done       message tag
+TAG_TASK = 1  # task       message tag
+TAG_TASK_DONE = 2  # tasks done message tag
+TAG_DONE = 3  # done       message tag
+
 
 def manager(comm, tasks):
     """
@@ -31,6 +34,7 @@ def manager(comm, tasks):
 
     pass
 
+
 def worker(comm):
     """
     The worker.
@@ -41,6 +45,7 @@ def worker(comm):
         MPI communicator
     """
     pass
+
 
 def readcmdline(rank):
     """
@@ -86,9 +91,10 @@ def readcmdline(rank):
 if __name__ == "__main__":
 
     # get COMMON WORLD communicator, size & rank
-    comm    = MPI.COMM_WORLD
-    size    = comm.Get_size()
+    comm = MPI.COMM_WORLD
+    size = comm.Get_size()
     my_rank = comm.Get_rank()
+    TasksDoneByWorker = np.zeros(size, dtype=int)
 
     # report on MPI environment
     if my_rank == MANAGER:
@@ -102,9 +108,9 @@ if __name__ == "__main__":
 
     # trying out ... YOUR MANAGER-WORKER IMPLEMENTATION HERE ...
     x_min = -2.
-    x_max  = +1.
-    y_min  = -1.5
-    y_max  = +1.5
+    x_max = +1.
+    y_min = -1.5
+    y_max = +1.5
     M = mandelbrot(x_min, x_max, nx, y_min, y_max, ny, ntasks)
     tasks = M.get_tasks()
     for task in tasks:
