@@ -28,7 +28,7 @@ for n in nx:
     baseline_time = median_time[median_time['threads'] == 0][time_str].item()
     efficiency = baseline_time/median_time[time_str][1:]
     plt.plot(threads, efficiency,
-             marker='o', label=f'nx={n}')
+             marker='o', label=f'Grid size={n} x {n}')
 plt.plot(threads, [2**i for i in range(len(threads))],
          linestyle='--', color='black', label='Ideal')
 

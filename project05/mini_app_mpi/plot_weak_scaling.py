@@ -4,8 +4,8 @@ import seaborn as sns
 
 sns.set(style="whitegrid", font_scale=1.1)
 # Read data from results.txt into a pandas DataFrame
-data_weak = pd.read_csv('/Users/carla/Documents/Courses/Spring2024/HPC_Lab/project05/mini_app_mpi/results_weak.txt')
-data_serial = pd.read_csv('/Users/carla/Documents/Courses/Spring2024/HPC_Lab/project05/mini_app_mpi/results_serial.txt')
+data_weak = pd.read_csv('results_weak.txt')
+data_serial = pd.read_csv('results_serial.txt')
 
 time_str = "timespent"
 threads_str = "threads"
@@ -33,16 +33,16 @@ for i, base_size in enumerate([64, 128, 256]):
     efficiency = serial_median[time_str] / weak_median[time_str] / factor
 
     # Weak Scaling Plot
-    plt.plot(threads, efficiency, marker='o', label=f'Base Size: {base_size}')
+    plt.plot(threads, efficiency, marker='o', label=f'Base Size: {base_size} x {base_size}')
 
 plt.plot(factor, [1 for i in range(len(threads))],
         linestyle='--', color='black', label='Ideal')
 plt.title('Weak Scaling')
-plt.xlabel('Number of Threads')
+plt.xticks(df_weak_['threads'].unique())
+plt.xlabel('Number of processes')
 plt.ylabel('Speedup')
 plt.legend()
 plt.grid(True)
-plt.xticks(threads)
 plt.xscale('log', base=2)
 plt.tight_layout()
 plt.savefig('weak_scaling_plot.pdf')
