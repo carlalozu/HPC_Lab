@@ -431,7 +431,7 @@ TasksDoneByWorker : dict
 
 Returns
 -------
-tasks_done_ : list of objects with a _i_start, _nx_local, and _patch
+tasks_done_ : list of objects with _i_start, _nx_local, and _patch
 attributes
     List of tasks done
 """
@@ -500,4 +500,38 @@ We can see that the manager and worker functions are called depending on the
 rank of the process. As a sidenote, I didn't find it necessary to use the
 \texttt{TAG\_DONE} tag.
 
+% Strong scaling
+Now, we will analyze the strong scaling of the parallel Mandelbrot set
+computation, for different numbers of processes and tasks. Each configuration
+was run fifty times and the median was used to generate the plot.
+The results are shown in the Figure \ref{fig:mandelbrot}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{../hpc_python/ManagerWorker/strong_scaling_plot.pdf}
+    \caption{Strong scaling of the parallel Mandelbrot set computation with
+    manager-worker implementation on a $4001 \times 4001$ grid with 50 and 100 tasks.}
+    \label{fig:mandelbrot}
+\end{figure}
+The reference was the case of 2 processes (1 worker and 1 manager) and 1 task.
+We can see that the speedup is consistent for all both cases of number of tasks,
+it is a good result that matches expected behaviour. For a high number of
+processes, the speedup declines a bit due to the communication overhead, but
+this is expected.
+Finally, we plot the bar plot of the number of tasks done by each worker for
+each configuration. The results are shown in the Figure \ref{fig:tasks}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{../hpc_python/ManagerWorker/tasks_per_worker.pdf}
+    \caption{Number of tasks done by each worker for each configuration of the
+    parallel Mandelbrot set computation with manager-worker implementation.}
+    \label{fig:tasks}
+\end{figure}
+We can see that the number of tasks done by each worker is distributed evenly
+for all configurations, which is a good result. This is expected since the
+tasks are distributed by the manager as soon as they are completed. For the
+plot, I tool the mean of the 50 runs, and that is why they are very even through
+the workers, since by the nature of the Mandelbrot set, some regions are more
+computationally expensive than others. We can also see that the behaviour is
+very similar for 50 and 100 tasks, which is a good indicator of the consistency
+of the implementation.
 \end{document}
