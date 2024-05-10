@@ -137,7 +137,6 @@ for (int k = 0; k < nx; k++)
     buffN[k] = s_new(k,jend);
     buffS[k] = s_new(k,0);
 }
-
 for (int k = 0; k < ny; k++)
 {
     buffE[k] = s_new(iend,k);
@@ -183,17 +182,101 @@ function is based on the \texttt{MPI\_File\_write\_at\_all} function, calling on
 each subdomain to write its own data. One of the main changes was to change the
 order to \texttt{MPI\_ORDER\_FORTRAN} to match the order of the data in the
 file.
-Nevertheless, the final output was not as expected, some parts of the image were
-inverted on the $y$ axis. 
+An example of the output image is shown in Figure \ref{fig:output}, which was
+generated using $2048 \times 2048$ grid points and 32 processes.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{../mini_app_mpi/output.png}
+    \caption{Example of the output image using $2048 \times 2048$ grid points and 32 processes.}
+    \label{fig:output}
+\end{figure}
+
 
 \subsection{Strong scaling [10 Points]}
-I tried to compute the strong scaling of the code, but some configurations were
-not working. The error that I faced was that the code was not converging under
-the same number of iterations and timesteps when using more than 4 processes. 
-I tried to change the number of iterations and timesteps, but the results were
-not consistent, converging on some cases and not others.
+Each configuration was run fifty times in order to get a more representative
+time. The distribution of the data is shown in Figure \ref{fig:data}. Warm up
+runs were included in the data, since they didn't seem to fall outside the distribution.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{../mini_app_mpi/data_var_strong.pdf}
+    \caption{Data distribution of the runtimes for different configurations of
+    the parallel diffusion equation solver. Zero processes indicates the serial version.}
+    \label{fig:data}
+\end{figure}
+We can see that for low number of processes, the data is not very spread out,
+but as the number of processes increases, the distribution is also wider,
+specially for a low number of grid points. 
+This is expected since the
+communication overhead increases with the number of processes, and is specially
+noticeable for a low number of grid points where parallelization is not as
+effective. We can see that for a high number of grid points, the distribution
+is consistent. 
+As serial version, I used the version of the code that doesn't use MPI, and is
+shown in the plot using the label $0$ processes. 
+Interestingly, we can see some cases
+where the parallel version using one thread is faster than the serial version.
+Both versions
+were both compiled using the same flags but different compilers, namely \texttt{c++} for
+the serial version and \texttt{mpicxx} for the parallel version. I am not sure if this
+affects the results.
+The results of
+the strong scaling are shown in the Figure \ref{fig:strong}. The data point used
+to generate the plot is the median of the fifty runs.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{../mini_app_mpi/strong_scaling_plot.pdf}
+    \caption{Strong scaling of the parallel diffusion equation solver.}
+    \label{fig:strong}
+\end{figure}
+We can see consistent speedup for a high number of grid points, but the speedup
+is not as good for a low number of grid points. 
+The case of grid size $64 \times 64$ is the one with the worst speedup, showing almost no speedup at all.
+This is expected due to the communication overhead as discussed previously. 
+The case of grid size $1024
+\times 1024$ is the one with the best speedup, showing beyond ideal speedup,
+which could be a result of the times taken from the serial version being slower
+due to some unknown reason. 
+
 \subsection{Weak scaling [10 Points]}
-For the same reason, I haven't done the weak scaling.
+Again the data was run fifty times for each configuration. The distribution of
+the data is shown in Figure \ref{fig:data_weak}. Warm up runs were included in
+the data, since they didn't seem to fall outside the distribution.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{../mini_app_mpi/data_var_weak.pdf}
+    \caption{Data distribution of the runtimes for different configurations of
+    the parallel diffusion equation solver.}
+    \label{fig:data_weak}
+\end{figure}
+This plot is inverted with respect to the strong scaling data visualization,
+since the needs for the weak scaling require different configurations.
+We can see that for each number of processes, the data increases as the number
+of grid points increases. This is expected since the computation time increases
+with the number of grid points. The data is not very spread out, which is
+a good indication of low variability in runtimes, except for the case of $64$
+processes, where the distribution is significantly wider. This is expected since
+it correlates with the overhead in communication.
+
+The results of the weak scaling are shown in the Figure \ref{fig:weak}.
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{../mini_app_mpi/weak_scaling_plot.pdf}
+    \caption{Weak scaling of the parallel diffusion equation solver.}
+    \label{fig:weak}
+\end{figure}
+It shows a somewhat expected result, except for the case of $256 \times 256$
+grid points as base case, where the speedup seems to be better than expected.
+The behaviour of the rest of the data points is consistent with the expected
+results, showing a decrease in speedup as the number of processes increases,
+even though the number of grid points also increases. Interestingly, the
+decrease in speedup is consistent for all the cases of starting grid points,
+which tells us that for this condigurations, using 32 processes is not good
+practice. Combined with the strong scaling results, we can see that the best
+number of processes to use is 16, since it shows a good speedup for all the
+cases. I am not sure why the speedup for the case of $256 \times 256$ grid
+ppoints using 16 processes is better than expected, but it could be related to hardware being
+optimal at that number of processes and grid points.
+
 \subsection{Bonus [20 Points]: Overlapping computation/computation details}
 
 
@@ -221,18 +304,18 @@ well as the fast, near C-speed, direct array data communication of
 buffer-provider objects.
 The following code snippets show the changes made to the code using lower case functions:
 \begin{pythonverbatim}
-    global_sum = comm.gather(rank)
-    if rank==0:
-    print(f"Sum: {sum(global_sum)}")
+global_sum = comm.gather(rank)
+if rank==0:
+print(f"Sum: {sum(global_sum)}")
 \end{pythonverbatim}
 as well as using the uppercase functions:
 \begin{pythonverbatim}
-    rank_array = np.array(rank, dtype=np.int32)
-    total_sum = np.zeros(1, dtype=np.int32)
-    comm.Allreduce(rank_array, total_sum, op=MPI.SUM)
-    
-    if rank==0:
-    print(f"Sum: {sum(total_sum)}")
+rank_array = np.array(rank, dtype=np.int32)
+total_sum = np.zeros(1, dtype=np.int32)
+comm.Allreduce(rank_array, total_sum, op=MPI.SUM)
+
+if rank==0:
+print(f"Sum: {sum(total_sum)}")
 \end{pythonverbatim}
 As the description of the assignment suggests, the uppercase functions are more
 efficient and also need to use arrays to store the data, otherwise the code will not work.
@@ -246,16 +329,175 @@ Both methods worked as expected (7+6+5+4+2+3+1+0).
 \subsection{Ghost cell exchange between neighboring processes [5 Points]}
 Now, we implemented the exchange of ghost cells between neighboring processes
 using MPI for Python.
+This replicates the same functionality as in the C++ code, done in project 4.
+First, we need to determine the number of subsections in the $x$ and $y$
+dimensions, depending on the number of processes. This was done using the
+\texttt{Compute\_dims} function. Then, we created a periodic Cartesian grid using the
+\texttt{Create\_cart} function. We also used the \texttt{Shift} function to
+determine the coordinates of the neighbors. The following code snippet shows
+the implemented code:
+\begin{pythonverbatim}
+# Create dims depending on number of ranks
+dims = [0, 0]
+dims = MPI.Compute_dims(size, dims)
 
+# Create cartesian grid
+periods = [True, True]
+cart2d = comm.Create_cart(dims, periods, reorder=False)
+coords = cart2d.Get_coords(rank)
 
+# Get coordinates of the neighbours
+west, east = cart2d.Shift(direction=1, disp=1)
+north, south = cart2d.Shift(direction=0, disp=1)
+\end{pythonverbatim}
+After filling a numpy array with the value of the rank, we excahnge the ghost
+cells with the neighbors using the \texttt{Sendrecv} function. 
+I decideded to use this function instead of the \texttt{sendrecv} for python
+objects, since it is more efficient and made sense with the description of the
+project since we are already dealing with data arrays.
+Also, the \texttt{Sendrecv} function is non-blocking, in contrast to the
+separate \texttt{Send} and \texttt{Recv} functions.
+Similarly to the C++ code, we needed send contiguous data; we didn't need to
+create a custom data type, but we did need to convert the columns into
+contiguous numpy arrays. Then, we assigned the received data to the
+corresponding columns.
+The following code snippet shows the implemented code:
+\begin{pythonverbatim}
+# Contiguous arrays to store columns
+col_east = np.empty(SUBDOMAIN, dtype=np.int32)
+col_west = np.empty(SUBDOMAIN, dtype=np.int32)
+
+# Send and receive
+comm.Sendrecv(data[0, 1:-1], north, 1, new_data[DOMAINSIZE-1, 1:-1], south, 1)
+comm.Sendrecv(data[DOMAINSIZE-1, 1:-1], south, 2, new_data[0, 1:-1], north, 2)
+comm.Sendrecv(np.array(data[1:-1, DOMAINSIZE-1].data,
+              dtype=np.int32), east, 4, col_west, west, 4)
+comm.Sendrecv(np.array(data[1:-1, 0].data,
+              dtype=np.int32), west, 3, col_east, east, 3)
+
+new_data[1:-1, DOMAINSIZE-1] = col_east.data
+new_data[1:-1, 0] = col_west.data
+\end{pythonverbatim}
+I added a Barrier and printed the results. I have to admit, doing this in Python was significantly easier than in C++.
 \subsection{A self-scheduling example: Parallel Mandelbrot [30 Points]}
 The final task was the most fun for me. I implemented the manager-worker pattern
 to distribute the computation of the Mandelbrot set among the workers. The
 manager was responsible for distributing the work and collecting the results,
 while the workers were responsible for computing the Mandelbrot set for a
 specific region of the complex plane. The manager was also responsible for
-plotting the final image. The code was based on the code provided in the
-assignment. The following code snippet shows the implementation of the manager:
+plotting the final image. The modifications were done on the code provided in
+the assignment.
 
+The following code snippet shows the implementation of the worker:
+\begin{pythonverbatim}
+def worker(comm):
+"""
+The worker.
+
+Parameters
+----------
+comm : mpi4py.MPI communicator
+    MPI communicator
+"""
+while True:
+    # receive task
+    task = comm.recv(source=MANAGER, tag=TAG_TASK)
+    if task is None:
+        break
+    # do task
+    task.do_work()
+    # send task done
+    comm.send(task, dest=MANAGER, tag=TAG_TASK_DONE)
+\end{pythonverbatim}
+We can see from the code that the worker is in an infinite loop, waiting for a
+task to be sent by the manager. Once the task is received, the worker computes
+the Mandelbrot set for the given region and sends the task back to the manager.
+When it receives a \texttt{None} object, the worker breaks the loop and exits.
+
+The following code snippet shows the implementation of the manager:
+\begin{pythonverbatim}
+def manager(comm, tasks, TasksDoneByWorker):
+"""
+The manager.
+
+Parameters
+----------
+comm : mpi4py.MPI communicator
+    MPI communicator
+tasks : list of objects with a do_task() method performing the task
+    List of tasks to accomplish
+TasksDoneByWorker : dict
+    Dictionary of number tasks done by worker
+
+Returns
+-------
+tasks_done_ : list of objects with a _i_start, _nx_local, and _patch
+attributes
+    List of tasks done
+"""
+ntasks = len(tasks)
+nworkers = comm.Get_size() - 1
+ntasks_sent = 0
+ntasks_done = 0
+task_index = 0
+tasks_done_ = []
+while ntasks_done < ntasks:
+    # send new tasks
+    while task_index < ntasks and ntasks_sent < nworkers:
+        comm.send(tasks[task_index], dest=ntasks_sent + 1, tag=TAG_TASK)
+        ntasks_sent += 1
+        task_index += 1
+
+    # receive task done
+    status = MPI.Status()
+    task = comm.recv(source=MPI.ANY_SOURCE,
+                        tag=TAG_TASK_DONE, status=status)
+    tasks_done_.append(task)
+    TasksDoneByWorker[status.source] += 1
+    ntasks_done += 1
+    ntasks_sent -= 1
+
+    # send new task
+    if task_index < ntasks:
+        comm.send(tasks[task_index], dest=status.source, tag=TAG_TASK)
+        ntasks_sent += 1
+        task_index += 1
+    # send done
+    else:
+        comm.send(None, dest=status.source, tag=TAG_TASK)
+return tasks_done_
+\end{pythonverbatim}
+We can see that the maneger has a more complex structure than the worker. It
+needs to keep track of the tasks that have been sent and the tasks that have
+been done. It also needs to keep track of the number of tasks done by each
+worker. The manager sends tasks to the workers and receives the results. Once
+all the tasks have been sent, the manager sends a \texttt{None} object to the
+workers to signal that there are no more tasks to be done. The manager then
+waits for the workers to finish their tasks and collects the results. The
+results are stored in a list and returned to the main function. The main
+function then plots the results. I also added the TasksDoneByWorker dictionary
+that keeps track of the number of tasks done by each worker. Since it is a
+dictionary, it is passed by reference and the changes are reflected in the main
+function. 
+
+The following code snippet shows the changes done on the main
+function:
+\begin{pythonverbatim}
+...
+if my_rank == MANAGER:
+    tasks_done_ = manager(comm, tasks, TasksDoneByWorker)
+else:
+    worker(comm)
+
+comm.Barrier()
+if my_rank == MANAGER:
+    im = M.combine_tasks(tasks_done_)
+    plt.imshow(im.T, cmap="gray", extent=[x_min, x_max, y_min, y_max])
+    plt.savefig("mandelbrot.png")
+...
+\end{pythonverbatim}
+We can see that the manager and worker functions are called depending on the
+rank of the process. As a sidenote, I didn't find it necessary to use the
+\texttt{TAG\_DONE} tag.
 
 \end{document}

@@ -28,10 +28,14 @@ def manager(comm, tasks, TasksDoneByWorker):
         MPI communicator
     tasks : list of objects with a do_task() method performing the task
         List of tasks to accomplish
+    TasksDoneByWorker : dict
+        Dictionary of number tasks done by worker
 
     Returns
     -------
-    ... ToDo ...
+    tasks_done_ : list of objects with a _i_start, _nx_local, and _patch
+    attributes
+        List of tasks done
     """
     print("Initializing manager")
     ntasks = len(tasks)
@@ -39,7 +43,6 @@ def manager(comm, tasks, TasksDoneByWorker):
     ntasks_sent = 0
     ntasks_done = 0
     task_index = 0
-    tasks_done = 0
     tasks_done_ = []
     while ntasks_done < ntasks:
         # send new tasks
@@ -166,7 +169,6 @@ if __name__ == "__main__":
     M = Mandelbrot(x_min, x_max, nx, y_min, y_max, ny, ntasks)
     tasks = M.get_tasks()
 
-    # trying out ... YOUR MANAGER-WORKER IMPLEMENTATION HERE ...
     if my_rank == MANAGER:
         tasks_done_ = manager(comm, tasks, TasksDoneByWorker)
         print("All tasks marked as done")
