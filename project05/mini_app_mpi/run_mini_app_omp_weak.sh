@@ -12,7 +12,7 @@
 module load gcc openmpi
 
 # Compile
-# make clean
+make clean
 make
 
 # Create results file
