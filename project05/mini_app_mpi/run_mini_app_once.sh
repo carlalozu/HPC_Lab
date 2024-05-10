@@ -9,8 +9,8 @@
 #SBATCH --time=00:05:00           # Wall clock time limit
 
 # Load some modules & list loaded modules
-module load gcc openmpi
-
+module load gcc openmpi python
+#salloc --ntasks=4 --constraint=EPYC_7763
 # Compile
 make clean
 make

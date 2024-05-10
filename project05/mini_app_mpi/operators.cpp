@@ -52,7 +52,7 @@ void diffusion(data::Field const& s_old, data::Field const& s_new,
         buffW[k] = s_new(0,k);
     }
 
-    // Exchange the ghost cells using non-blocking point-to-point
+    // exchange the ghost cells using non-blocking point-to-point
     // communication
     MPI_Request request[8];
     int tag1 = 1, tag2 = 2, tag3 = 3, tag4 = 4;

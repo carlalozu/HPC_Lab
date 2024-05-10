@@ -48,7 +48,6 @@ void SubDomain::init(int mpi_rank, int mpi_size,
     domx = coords[1] + 1;
 
     // set neighbours for all directions using MPI_Cart_shift
-
     MPI_Cart_shift(comm_cart, 0, 1, &neighbour_south, &neighbour_north);
     MPI_Cart_shift(comm_cart, 1, 1, &neighbour_west, &neighbour_east);
 
@@ -58,7 +57,6 @@ void SubDomain::init(int mpi_rank, int mpi_size,
     startx = (domx-1)*nx+1;
     starty = (domy-1)*ny+1;
 
-    // adjust for the remainder
     if( domx == ndomx )
         nx = discretization.nx - startx + 1;
     if( domy == ndomy )

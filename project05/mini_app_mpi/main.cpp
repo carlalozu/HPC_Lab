@@ -296,7 +296,9 @@ int main(int argc, char *argv[])
         if (!converged)
         {
             std::cerr << "step " << timestep
-                      << " ERROR : nonlinear iterations failed to converge" << std::endl;
+                      << " ERROR : nonlinear iterations failed to converge \n"
+                      << iters_newton << " newton iterations" << std::endl;
+
             ;
             break;
         }
