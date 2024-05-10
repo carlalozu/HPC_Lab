@@ -16,7 +16,7 @@ python -m venv project05-env
 
 # Create results file
 > results_strong.txt
-echo "nx,ny,ntasks,size,timespent,TasksDoneByWorker" | tee -a results_strong.txt
+echo "nx,ny,ntasks,processes,timespent,TasksDoneByWorker" | tee -a results_strong.txt
 # Size loop
 for ((k=0; k<2; k++)) do
     N=$((50*(2**k)))

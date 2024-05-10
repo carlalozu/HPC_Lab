@@ -5,35 +5,32 @@ import seaborn as sns
 sns.set(style="whitegrid", font_scale=1.1)
 # Read data from results.txt into a pandas DataFrame
 data_strong = pd.read_csv('results_strong.txt')
-data_serial = pd.read_csv('results_serial.txt')
 
 time_str = "timespent"
-threads_str = "threads"
+threads_str = "size"
 
-df_strong = pd.DataFrame(data_strong)
-df_serial = pd.DataFrame(data_serial)
-
-df_complete = pd.concat([df_strong, df_serial])
+df_strong = pd.DataFrame(data_strong[['ntasks',threads_str,time_str]])
 
 # Strong Scaling Plot
-nx = df_strong['nx'].unique()
-threads = df_strong['threads'].unique()
+ntasks = df_strong['ntasks'].unique()
+threads = df_strong[threads_str].unique()
+
 
 plt.figure(figsize=(10, 5))
 # Plotting
-for n in nx:
-    subset = df_complete[df_complete['nx'] == n]
+for n in ntasks:
+    subset = df_strong[df_strong['ntasks'] == n]
     # Calculate strong scaling efficiency
     median_time = subset.groupby(threads_str).median().reset_index()
-    baseline_time = median_time[median_time[threads_str] == 0][time_str].item()
-    efficiency = baseline_time/median_time[time_str][1:]
+    baseline_time = median_time[median_time[threads_str] == 2][time_str].item()
+    efficiency = baseline_time/median_time[time_str]
     plt.plot(threads, efficiency,
-             marker='o', label=f'Grid size={n} x {n}')
+             marker='o', label=f'Number of tasks={n}')
 plt.plot(threads, [2**i for i in range(len(threads))],
          linestyle='--', color='black', label='Ideal')
 
 plt.title('Strong Scaling')
-plt.xlabel('Number of Threads')
+plt.xlabel('Number of Processes')
 plt.ylabel('Speedup')
 plt.yscale('log', base=2)
 plt.legend()

@@ -33,7 +33,7 @@ def manager(comm, tasks, TasksDoneByWorker):
 
     Returns
     -------
-    tasks_done_ : list of objects with a _i_start, _nx_local, and _patch
+    tasks_done_ : list of objects with _i_start, _nx_local, and _patch
     attributes
         List of tasks done
     """
