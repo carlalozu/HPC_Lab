@@ -38,7 +38,7 @@ for idx, n in enumerate(ntasks, start=1):
         hist_mean = subset['hist'].values.squeeze().mean()
         offset = 0.8*i/len(threads)  # Calculate offset
         plt.bar(np.arange(1, len(hist_mean)+1) + offset, hist_mean,
-                width=0.3, label=f'{thread} threads', alpha=0.8)
+                width=0.3, label=f'{thread} processes', alpha=0.8)
 
     plt.xticks(np.arange(1, len(hist_mean)+1),
                labels=np.arange(1, len(hist_mean)+1))

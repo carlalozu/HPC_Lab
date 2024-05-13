@@ -32,7 +32,6 @@ for n in nx:
 plt.plot(threads, [2**i for i in range(len(threads))],
          linestyle='--', color='black', label='Ideal')
 
-plt.title('Strong Scaling')
 plt.xlabel('Number of Threads')
 plt.ylabel('Speedup')
 plt.yscale('log', base=2)

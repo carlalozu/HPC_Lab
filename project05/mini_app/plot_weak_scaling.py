@@ -37,7 +37,6 @@ for i, base_size in enumerate([64, 128, 256]):
 
 plt.plot(factor, [1 for i in range(len(threads))],
         linestyle='--', color='black', label='Ideal')
-plt.title('Weak Scaling')
 plt.xticks(df_weak_['threads'].unique())
 plt.xlabel('Number of processes')
 plt.ylabel('Speedup')

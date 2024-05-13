@@ -94,7 +94,15 @@ each process and the \texttt{MPI\_Cart\_shift} function to determine the neighbo
 We also added some conditions to adjust the
 cases for when a dimension is not divisible by the number of processes.
 
-TODO: Discuss why this method was selected and analyze its implications on the performance of the application.
+% TODO: Discuss why this method was selected and analyze its implications on the
+% performance of the application.
+The \texttt{MPI\_Dims\_create} function has the eadvnatage of trying to create a
+grid with the most square-like shape possible, which is a good strategy for
+domain decomposition. This is important since it helps to minimize the
+communication overhead between processes. For some number of
+processes, ``slab'' decomposition is implemented. Square-like shapes are
+preferred since they have a better balance between surface to area ration, which
+improves computational efficiency.
 % Consider aspects such as load balancing, communication overhead, and
 % computational efficiency in your analysis.
 % Hint: Consider the number of data that must be communicated by a generic process with its neighbors.
@@ -186,7 +194,7 @@ An example of the output image is shown in Figure \ref{fig:output}, which was
 generated using $2048 \times 2048$ grid points and 32 processes.
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{../mini_app_mpi/output.png}
+    \includegraphics[width=0.5\textwidth]{../mini_app/output.png}
     \caption{Example of the output image using $2048 \times 2048$ grid points and 32 processes.}
     \label{fig:output}
 \end{figure}
@@ -198,7 +206,7 @@ time. The distribution of the data is shown in Figure \ref{fig:data}. Warm up
 runs were included in the data, since they didn't seem to fall outside the distribution.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\textwidth]{../mini_app_mpi/data_var_strong.pdf}
+    \includegraphics[width=\textwidth]{../mini_app/data_var_strong.pdf}
     \caption{Data distribution of the runtimes for different configurations of
     the parallel diffusion equation solver. Zero processes indicates the serial version.}
     \label{fig:data}
@@ -224,8 +232,8 @@ the strong scaling are shown in the Figure \ref{fig:strong}. The data point used
 to generate the plot is the median of the fifty runs.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\textwidth]{../mini_app_mpi/strong_scaling_plot.pdf}
-    \caption{Strong scaling of the parallel diffusion equation solver.}
+    \includegraphics[width=\textwidth]{../mini_app/strong_scaling_plot.pdf}
+    \caption{Strong scaling of the parallel diffusion equation solver using different grid sizes compared against serial version. Representative data point is the mean of 50 runs.}
     \label{fig:strong}
 \end{figure}
 We can see consistent speedup for a high number of grid points, but the speedup
@@ -243,7 +251,7 @@ the data is shown in Figure \ref{fig:data_weak}. Warm up runs were included in
 the data, since they didn't seem to fall outside the distribution.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\textwidth]{../mini_app_mpi/data_var_weak.pdf}
+    \includegraphics[width=\textwidth]{../mini_app/data_var_weak.pdf}
     \caption{Data distribution of the runtimes for different configurations of
     the parallel diffusion equation solver.}
     \label{fig:data_weak}
@@ -260,8 +268,8 @@ it correlates with the overhead in communication.
 The results of the weak scaling are shown in the Figure \ref{fig:weak}.
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\textwidth]{../mini_app_mpi/weak_scaling_plot.pdf}
-    \caption{Weak scaling of the parallel diffusion equation solver.}
+    \includegraphics[width=\textwidth]{../mini_app/weak_scaling_plot.pdf}
+    \caption{Weak scaling of the parallel diffusion equation solver compared against serial version, using different base sizes. Representative data point is the mean of 50 runs.}
     \label{fig:weak}
 \end{figure}
 It shows a somewhat expected result, except for the case of $256 \times 256$
@@ -277,7 +285,7 @@ cases. I am not sure why the speedup for the case of $256 \times 256$ grid
 ppoints using 16 processes is better than expected, but it could be related to hardware being
 optimal at that number of processes and grid points.
 
-\subsection{Bonus [20 Points]: Overlapping computation/computation details}
+% \subsection{Bonus [20 Points]: Overlapping computation/computation details}
 
 
 \section{Python for High-Performance Computing [in total 40 points]}
@@ -509,7 +517,8 @@ The results are shown in the Figure \ref{fig:mandelbrot}.
     \centering
     \includegraphics[width=\textwidth]{../hpc_python/ManagerWorker/strong_scaling_plot.pdf}
     \caption{Strong scaling of the parallel Mandelbrot set computation with
-    manager-worker implementation on a $4001 \times 4001$ grid with 50 and 100 tasks.}
+    manager-worker implementation on a $4001 \times 4001$ grid with 50 and 100
+    tasks. Representative data point is the mean of 50 runs.}
     \label{fig:mandelbrot}
 \end{figure}
 The reference was the case of 2 processes (1 worker and 1 manager) and 1 task.
@@ -523,13 +532,14 @@ each configuration. The results are shown in the Figure \ref{fig:tasks}.
     \centering
     \includegraphics[width=\textwidth]{../hpc_python/ManagerWorker/tasks_per_worker.pdf}
     \caption{Number of tasks done by each worker for each configuration of the
-    parallel Mandelbrot set computation with manager-worker implementation.}
+    parallel Mandelbrot set computation with manager-worker implementation.
+    Maanager process is ommited from the plot since it doesn't do any tasks.}
     \label{fig:tasks}
 \end{figure}
 We can see that the number of tasks done by each worker is distributed evenly
 for all configurations, which is a good result. This is expected since the
 tasks are distributed by the manager as soon as they are completed. For the
-plot, I tool the mean of the 50 runs, and that is why they are very even through
+plot, I took the mean of the 50 runs, and that is why they are very even through
 the workers, since by the nature of the Mandelbrot set, some regions are more
 computationally expensive than others. We can also see that the behaviour is
 very similar for 50 and 100 tasks, which is a good indicator of the consistency
