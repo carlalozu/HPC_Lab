@@ -16,41 +16,34 @@ julia> inertial_part(A, coords)
 function inertial_part(A, coords)
 
     d = size(coords)[2]
-    best_cut = Inf
     p = ones(Int, size(coords)[1])
-    p_temp = ones(Int, size(coords)[1])
+    mass_ = zeros(Float64, size(coords)[1])
 
     # 1. Compute the center of mass.
-    center_of_mass = sum(coords, dims=1) / size(coords)[1]
+    for dim in 1:d
+        mass_[dim] = sum(coords[:,dim])/size(coords)[1]
+    end
 
     # 2. Construct the matrix M. (see pdf of the assignment)
+    #   (assumes 2 dim)
+    Sxx = sum(coords[:,1].-mass_[1]).^2
+    Syy = sum(coords[:,2].-mass_[2]).^2
+    Sxy = sum(coords[:,1].-mass_[1]).*sum(coords[:,2].-mass_[2])
+
+    M = [Syy, Sxy, Sxy, Sxx]
+    M = reshape(M, d, d)
 
     # 3. Compute the eigenvector associated with the smallest eigenvalue of M.
+    vals, vecs = eigen(M)
 
     # 4. Partition the nodes around line L 
     #    (use may use the function partition(coords, eigv))
+    p1, p2 = partition(coords, vecs[:,1])
 
     # 5. Return the indicator vector
+    p[p1] .= 1
+    p[p2] .= 2
 
-    for dim in 1:d
-        v = zeros(d)
-        v[dim] = 1
-        p1, p2 = partition(coords, v)
-        p_temp[p1] .= 1
-        p_temp[p2] .= 2
-        this_cut = count_edge_cut(A, p_temp)
-        if this_cut < best_cut
-            best_cut = this_cut
-            p = ones(Int, size(coords)[1])
-            p[p1] .= 1
-            p[p2] .= 2
-        end
-    end
-
-    # RANDOM PARTITIONING - REMOVE AFTER COMPLETION OF THE EXERCISE
-    n = size(A)[1];
-    rng = MersenneTwister(1234);
-    p = Int.(bitrand(rng, n));
     return p
 
 end
