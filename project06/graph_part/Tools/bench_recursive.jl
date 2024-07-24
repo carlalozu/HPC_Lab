@@ -33,8 +33,8 @@ function benchmark_recursive()
         pAll[i, 1] = mesh;
 
         # 1. Coordinate
-        pCoordinate08 = rec_bisection("coordinate_part", 3, A, coords);
-        pCoordinate16 = rec_bisection("coordinate_part", 4, A, coords);
+        pCoordinate08 = rec_bisection("coordinatePart", 3, A, coords);
+        pCoordinate16 = rec_bisection("coordinatePart", 4, A, coords);
         pAll[i, 2] = count_edge_cut(A, pCoordinate08);
         pAll[i, 3] = count_edge_cut(A, pCoordinate16);
 
@@ -51,14 +51,14 @@ function benchmark_recursive()
         pAll[i, 7] = count_edge_cut(A, pMetis_recursive16);
 
         # 4. Inertial
-        pInertial08 = rec_bisection("inertial_part", 3, A, coords);
-        pInertial16 = rec_bisection("inertial_part", 4, A, coords);
+        pInertial08 = rec_bisection("inertialPart", 3, A, coords);
+        pInertial16 = rec_bisection("inertialPart", 4, A, coords);
         pAll[i, 8] = count_edge_cut(A, pInertial08); 
         pAll[i, 9] = count_edge_cut(A, pInertial16);
 
         # 5. Spectral
-        pSpectral08 = rec_bisection("spectral_part", 3, A);
-        pSpectral16 = rec_bisection("spectral_part", 4, A);
+        pSpectral08 = rec_bisection("spectralPart", 3, A);
+        pSpectral16 = rec_bisection("spectralPart", 4, A);
         pAll[i, 10] = count_edge_cut(A, pSpectral08);
         pAll[i, 11] = count_edge_cut(A, pSpectral16);
 
