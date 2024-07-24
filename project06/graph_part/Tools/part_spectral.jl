@@ -21,20 +21,28 @@ function spectral_part(A)
         @warn "graph is large. Computing eigen values may take too long."     
     end
 
+    p = ones(Int, n)
+
     # 1. Construct the Laplacian matrix.
+    d = sum(abs.(A).>0, dims=2)
+    D = spdiagm(d[:,1])
+
+    # L = D .- A
+    L = D .- (abs.(A).>0).*1
 
     # 2. Compute its eigendecomposition.
+    vals, vecs = eigs(L, nev=6, which=:SM)
 
     # 3. Label the vertices with the entries of the Fiedler vector.
+    fiedler = vecs[:,2]
 
     # 4. Partition them around their median value, or 0.
+    threshold = median(fiedler)
 
     # 5. Return the indicator vector
+    indices = findall(x -> x > threshold, fiedler)
+    p[indices] .= 2
 
-    # RANDOM PARTITIONING - REMOVE AFTER COMPLETION OF THE EXERCISE
-    n = size(A)[1];
-    rng = MersenneTwister(1234);
-    p = Int.(bitrand(rng, n));
     return p
 
 end
