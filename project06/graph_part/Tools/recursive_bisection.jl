@@ -51,7 +51,7 @@ function rec_bisection(method, levels, A, coords=zeros(0,0), vn=zeros(0))
             recursion(A1_, levels_, index_[a1], count_)
             recursion(A2_, levels_, index_[a2], count_ + levels_)
         else
-            println(index_, count_)
+            # println(index_, count_)
             p[[i in index_ for i in 1:n]] .= count_
         end
     end

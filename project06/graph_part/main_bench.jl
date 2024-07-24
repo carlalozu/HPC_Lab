@@ -1,5 +1,7 @@
 # M.L. for High Performance Computing Lab @USI & @ETHZ - malik.lechekhab@usi.ch 
 # Main file of Project 6
+import Pkg
+Pkg.activate("env")
 
 # I/O packages
 using DelimitedFiles, MAT

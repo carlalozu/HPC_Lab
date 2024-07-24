@@ -31,7 +31,7 @@ function spectral_part(A)
     L = D .- (abs.(A).>0).*1
 
     # 2. Compute its eigendecomposition.
-    vals, vecs = eigs(L, nev=6, which=:SM)
+    _, vecs = eigs(L, nev=6, which=:SM, maxiter=1000)
 
     # 3. Label the vertices with the entries of the Fiedler vector.
     fiedler = vecs[:,2]

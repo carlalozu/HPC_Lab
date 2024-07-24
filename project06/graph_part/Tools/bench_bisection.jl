@@ -22,6 +22,7 @@ function benchmark_bisection()
 
     # Loop through meshes
     for (i, mesh) in enumerate(meshes)
+        println("Mesh ", mesh, " done")
         # Read data
         A, coords = getData(mesh);
 
