@@ -20,12 +20,42 @@ julia> rec_bisection("coordinatePart", 3, A, coords)
  8
 ```
 """
-function rec_bisection(method, levels, A, coords=zeros(0), vn=zeros(0))
+function rec_bisection(method, levels, A, coords=zeros(0,0), vn=zeros(0))
 
-    # RANDOM PARTITIONING - REMOVE AFTER COMPLETION OF THE EXERCISE
-    n = size(A)[1];
-    rng = MersenneTwister(1234);
-    p = Int.(rand(rng, 1:2^levels, n));
+    n = size(A, 1)
+    l = 2^levels
+    index = 1:n
+    p = ones(Int, n)
+
+    function recursion(A_, levels_, index_, count_)
+        if levels_ % 2 == 0
+            levels_ = div(levels_, 2)
+
+            if method == "spectralPart"
+                p_ = spectral_part(A_)
+            elseif method == "inertialPart"
+                p_ = inertial_part(A_, coords[index_, :])
+            elseif method == "coordinatePart"
+                p_ = coordinate_part(A_, coords[index_, :])
+            else 
+                println("Method not available")
+                return
+            end
+
+            a1 = p_ .== 1
+            a2 = p_ .== 2
+
+            A1_ = A_[a1, a1]
+            A2_ = A_[a2, a2]
+
+            recursion(A1_, levels_, index_[a1], count_)
+            recursion(A2_, levels_, index_[a2], count_ + levels_)
+        else
+            println(index_, count_)
+            p[[i in index_ for i in 1:n]] .= count_
+        end
+    end
+
+    recursion(A, l, index, 1)
     return p
-
 end
