@@ -16,10 +16,10 @@ u = read(h5file, key)
 n = 10
 u_ = reshape(u, n, n);
 
-surface(u_, title="CG solution", xlabel="x", ylabel="y", zlabel="u(x,y)")
+plot_ = surface(u_, title="PETSC solution", xlabel="x", ylabel="y", zlabel="u(x,y)");
 
 
-savefig(plot, "surface_plot.pdf")  # Saves the plot as a PDF file
+savefig(plot_, "surface_plot.pdf")
 
 # Close the HDF5 file
-close(u)
+close(h5file)
