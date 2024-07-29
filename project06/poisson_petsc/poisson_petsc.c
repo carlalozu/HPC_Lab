@@ -15,13 +15,13 @@ static char help[] = "Solves the poisson equation.\n\n";
 
 int main(int argc, char **args)
 {
-   Vec x, b;                                            /* approx solution, RHS */
-   Mat A;                                               /* linear system matrix */
-   KSP ksp;                                             /* linear solver context */
-   PC pc;                                               /* preconditioner context */
-   PetscInt n = 10;                                     /* size of the grid */
-   PetscInt i, N = n*n, col[3], rstart, rend, nlocal;
-   PetscScalar twenty = 20.0, value[3];
+   Vec x, b;        /* approx solution, RHS */
+   Mat A;           /* linear system matrix */
+   KSP ksp;         /* linear solver context */
+   PC pc;           /* preconditioner context */
+   PetscInt n = 10; /* size of the grid */
+   PetscInt i, N = n * n, col[1], rstart, rend, nlocal;
+   PetscScalar twenty = 20.0, value[1], h;
 
    PetscFunctionBeginUser;
    PetscCall(PetscInitialize(&argc, &args, (char *)0, help));
@@ -76,37 +76,41 @@ int main(int argc, char **args)
       the part that it owns locally.
    */
 
-   if (!rstart)
-   {
-      rstart = 1;
-      i = 0;
-      col[0] = 0;
-      col[1] = 1;
-      value[0] = -4.0;
-      value[1] = 1.0;
-      PetscCall(MatSetValues(A, 1, &i, 2, col, value, INSERT_VALUES));
-   }
-   if (rend == N)
-   {
-      rend = N - 1;
-      i = N - 1;
-      col[0] = N - 2;
-      col[1] = N - 1;
-      value[0] = 1.0;
-      value[1] = -4.0;
-      PetscCall(MatSetValues(A, 1, &i, 2, col, value, INSERT_VALUES));
-   }
-
    /* Set entries corresponding to the mesh interior */
-   value[0] = 1.0;
-   value[1] = -4.0;
-   value[2] = 1.0;
+   h = 1.0 / (n + 1);
    for (i = rstart; i < rend; i++)
    {
-      col[0] = i - 1;
-      col[1] = i;
-      col[2] = i + 1;
-      PetscCall(MatSetValues(A, 1, &i, 3, col, value, INSERT_VALUES));
+      value[0] = 4.0 / (h * h);
+      col[0] = i;
+      PetscCall(MatSetValues(A, 1, &i, 1, col, value, INSERT_VALUES));
+
+      if (((i + 1) % n != 0) && (i != N))
+      {
+         value[0] = -1.0 / (h * h);
+         col[0] = i + 1;
+         PetscCall(MatSetValues(A, 1, &i, 1, col, value, INSERT_VALUES));
+      }
+
+      if ((i % n != 0) && i != 0)
+      {
+         value[0] = -1.0 / (h * h);
+         col[0] = i - 1;
+         PetscCall(MatSetValues(A, 1, &i, 1, col, value, INSERT_VALUES));
+      }
+
+      if (i + n < N)
+      {
+         value[0] = -1.0 / (h * h);
+         col[0] = i + n;
+         PetscCall(MatSetValues(A, 1, &i, 1, col, value, INSERT_VALUES));
+      }
+
+      if (i - n >= 0)
+      {
+         value[0] = -1.0 / (h * h);
+         col[0] = i - n;
+         PetscCall(MatSetValues(A, 1, &i, 1, col, value, INSERT_VALUES));
+      }
    }
 
    /* Assemble the matrix */
@@ -171,14 +175,19 @@ int main(int argc, char **args)
    /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                        Check solution and clean up
       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
-   /* 
-      Print vector x to an output file 
+   /*
+      Print vector x to an output file
    */
-   PetscCall(VecView(x, PETSC_VIEWER_STDOUT_WORLD));
+
+   // Print the matrix A with a specific name
    PetscCall(MatView(A, PETSC_VIEWER_STDOUT_WORLD));
 
-   /*
-      Free work space.  All PETSc objects should be destroyed when they
+   PetscViewer hdf5viewer;
+   PetscCall(PetscViewerHDF5Open(PETSC_COMM_WORLD, "solution.h5", FILE_MODE_WRITE, &hdf5viewer));
+   PetscCall(VecView(x, hdf5viewer));
+   PetscCall(PetscViewerDestroy(&hdf5viewer));
+
+   /*   Free work space.  All PETSc objects should be destroyed when they
       are no longer needed.
    */
    PetscCall(VecDestroy(&x));
@@ -195,4 +204,3 @@ int main(int argc, char **args)
    PetscCall(PetscFinalize());
    return 0;
 }
-
