@@ -239,7 +239,7 @@ of the Euler VII (Phase I and II) cluster.
 \subsubsection{Cache and main memory size}
 After logging into the Euler VII (Phase I and II) cluster, we can use the \textbf{lscpu} command to obtain information
 about the CPU architecture. We also read the file \textbf{/proc/meminfo} to obtain information about the main memory.
-Finally, \textbf{hwloc-ls} can be used to obtain information about the cache sizes. The results are shown in Table \ref{tab:memory-config}.
+Finally, \textbf{hwloc-ls} can be used to obtain information about the cache sizes. The results are shown in Table \ref{tab:memory_config}.
 Each core has its own L1 and L2 cache. The retrived information reveals that the L3 cache is shared among eight 
 cores for the AMD EPYC 7H12 and four cores for the AMD EPYC 7763. 
 The schemas of the memory hierarchy of both processors can be found in 
@@ -265,7 +265,7 @@ Figure \ref{fig:7H12_processor} and Figure \ref{fig:7763_processor} included in 
      L1i cache & 32 KB & 32 KB \\
      \hline
     \end{tabular}
-    \label{tab:memory-config}
+    \label{tab:memory_config}
 \end{table}
 
 
@@ -384,7 +384,7 @@ Table \ref{tab:ridge_point} summarizes these three values for the Euler III and 
 The results are shown in Figure \ref{fig:roofline}.
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{../task_2_4/roofline.pdf}
+    \includegraphics[width=0.8\textwidth]{../roofline/roofline.pdf}
     \caption{Log-Log Roofline Model for Euler III and Euler VII Nodes (Phase I and II).}
     \label{fig:roofline}
 \end{figure}
@@ -656,7 +656,7 @@ Figure \ref{fig:performance_mavx2} shows the performance of the three algorithms
 pragma directives.
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{../task_4/timing_mavx2.pdf}
+    \includegraphics[width=0.8\textwidth]{../matrix_mult/timing_mavx2.pdf}
     \caption{Performance of the three algorithms using several compiler flags including mavx2 and pragma directives.}
 \label{fig:performance_mavx2}
 \end{figure}
@@ -686,7 +686,7 @@ was given by the software, and I had to rotate them to fit the page and become m
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1.5\textwidth, angle=90]{../task_2_1/eulerVII_I/EPYC_7H12.pdf}
+    \includegraphics[width=1.5\textwidth, angle=90]{../cache_main_mem/eulerVII_I/EPYC_7H12.pdf}
     \caption{Memory Hierarchy of the AMD EPYC 7H12 Processor.}
 \label{fig:7H12_processor}
 \end{figure}
@@ -694,7 +694,7 @@ was given by the software, and I had to rotate them to fit the page and become m
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=1.5\textwidth, angle=90]{../task_2_1/EulerVII_II/EPYC_7763.pdf}
+    \includegraphics[width=1.5\textwidth, angle=90]{../cache_main_mem/EulerVII_II/EPYC_7763.pdf}
     \caption{Memory Hierarchy of the AMD EPYC 7763 Processor.}
 \label{fig:7763_processor}
 \end{figure}
