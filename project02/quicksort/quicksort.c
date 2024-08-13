@@ -46,11 +46,13 @@ void quicksort(double *data, int length)
   }
 
   // print_list(data, length);
+  // Threshold for the size of data to stop parallelization
+  int threshold = 5000; 
 
   /* recursion */
-#pragma omp task
+#pragma omp task final(length <= threshold)
   quicksort(data, right);
-#pragma omp task
+#pragma omp task final(length <= threshold)
   quicksort(&(data[left]), length - left);
 }
 

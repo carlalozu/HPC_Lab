@@ -32,10 +32,11 @@ int main(int argc, char **argv)
        {
               // Get the number of threads
               num_threads = omp_get_num_threads();
-#pragma omp for
+              
               for (j = 0; j < IMAGE_HEIGHT; j++)
               {
                      cy = fDeltaY * j + MIN_Y;
+#pragma omp for schedule(dynamic, IMAGE_WIDTH/(num_threads*4)) 
                      for (i = 0; i < IMAGE_WIDTH; i++)
                      {
                             cx = fDeltaX * i + MIN_X;

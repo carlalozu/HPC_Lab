@@ -29,7 +29,6 @@
 }{}
 
 \input{assignment.sty}
-
 \begin{document}
 
 
@@ -40,8 +39,10 @@
             {Student: CARLA JUDITH LOPEZ ZURITA}
             {Discussed with: YANNICK RAMIC \\
             \hspace*{370pt}ALITZEL MACIAS}
+{Solution for Project 2}{}
 \newline
 
+The aim of this project is to familiarize the students with the OpenMP library.
 \section{Computing $\pi$ with \texttt{OpenMP} [20 points]}
 
 \begin{enumerate}
@@ -51,7 +52,7 @@
 
     In this exercise, we will use the critical directive and the reduction
     clause to parallelize the serial implementation of the computation of $\pi$.
-    The \textbf{critical} directive is a synchronization Construct that
+    The \textbf{critical} directive is a synchronization construct that
     specifies a region of code that must be executed by only one thread at a
     time. \cite{hpc-tutorials-llnl-critical}
     You have to use the following structure for the parallel region:
@@ -63,7 +64,10 @@ for (...){
 }
     \end{cppverbatim}
 
-    On the other hand, the \textbf{reduction} is a  a Data Scope Attribute
+    In this implementation, each thread stores a local sum of the computation over their part of the
+    loop and then \textbf{one thread at a time (critical)} write to the global variable.
+
+    On the other hand, the \textbf{reduction} is a Data Scope Attribute
     Clause. It performs a reduction on the variables that appear in its list.
     A private copy for each list variable is created for each thread. At the end
     of the reduction, the reduction variable is applied to all private copies of
@@ -89,15 +93,14 @@ for (...){
     % \end{align}
     This is called \textbf{strong scaling} because the amount of work stays constant no
     matter how many workers are used. Here the goal of parallelization is
-    minimization of time to solution for a given problem, where the total amount
-    of work is $s + p$. 
+    minimization of time to solution for a given problem. 
     This is also known as Amdahl's law.
     To plot the strong scaling efficiency, we use the following formula for the speedup $S$,
     \begin{align}
-      S =  \frac{T(1)}{T(N)},
+      S =  \frac{T(1)}{T(p)},
     \end{align}
     where $T(1)$ is the runtime for the serial code, running in one processor, while
-    $T(N)$ is the runtime for the parallel code with N workers.
+    $T(p)$ is the runtime for the parallel code with $p$ workers.
     For our implemetation of the code to calculate $\pi$, we present the results 
     of the strong scaling efficiency in Figure \ref{fig:strong-scaling}.
     \begin{figure}[h]
@@ -122,7 +125,7 @@ for (...){
     problem size with some power of N and analyze the difference in efficiency.
     We use the following formula to calculate efficiency $E$,
     \begin{align}
-      E =  \frac{T(1)}{p*T(N)}.
+      E =  \frac{T(1)}{p*T(p)}.
     \end{align}
     The difference between strong and weak scaling is that in the former the
     problem size is fixed, while in the latter the problem size is scaled with
@@ -289,8 +292,8 @@ Thread 3 is done! Total= 0.000000e+00
   The problem is that the \texttt{total} variable is not being updated correctly.
   The solution is to declare the total variable as a shared variable by adding
   \texttt{shared(total)} to the \texttt{parallel} directive. Also the location of
-  setting the total to zero must be before the parallel structure starts. SO that
-  it is not being reinitialized iwth each thread. Finally,  \texttt{reduction(+ :
+  setting the total to zero must be before the parallel structure starts. So that
+  it is not being reinitialized with each thread. Finally, \texttt{reduction(+ :
   total)} or a similar class is needded to update the total variable correctly.
   Additionally, the print
   statement is only useful if you want to know that the program has ended but not
@@ -299,7 +302,7 @@ Thread 3 is done! Total= 0.000000e+00
   \item \textbf{Bug 3}
   Code three also has a bug at runtime. The idea behind the code is to perform two
   sections on different threads. When running the program with 2 threads, it
-  performs the action and ends the program correctky. However, when running it
+  performs the action and ends the program correctly. However, when running it
   with 4 threads, I get the whole output but then the program hangs.
   What I did was to remove the \texttt{\#pragma omp barrier} directive in the
   function \textbf{print\_results}. This directive is not needed because the
@@ -324,7 +327,7 @@ Thread 3 is done! Total= 0.000000e+00
   Code number five creates another runtime error that keeps the program hanging.
   The issue appears to be related to the locks set between the threads. The
   error occurs because the locks are not being set and released properly. The
-  solution is to set and unset corrsponding lockes referring to the
+  solution is to set and unset corrsponding locks referring to the
   initialization of both arrays and then the same but calling for the other
   arrays lock for the addition of both of them. This will prevent the deadlock
   by ensuring that both threads are not waiting indefinitely for each other to

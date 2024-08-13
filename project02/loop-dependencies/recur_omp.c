@@ -6,10 +6,10 @@
 
 int main(int argc, char *argv[])
 {
-  int N = 2000000000;
+  int N = 20000000;
   double up = 1.00000001;
   double Sn = 1.00000001;
-  int n, i;
+  int n;
 
   /* allocate memory for the recursion */
   double *opt = (double *)malloc((N + 1) * sizeof(double));
@@ -20,32 +20,33 @@ int main(int argc, char *argv[])
   }
 
   double time_start = walltime();
-#pragma omp parallel shared(opt, N, up) private(n, i)
+
+  double dist;
+  long nthreads, tid;
+
+#pragma omp parallel private(dist, tid) shared(nthreads) reduction(* : Sn)
   {
-    i = 0;
-#pragma omp for firstprivate(Sn) lastprivate(Sn)
-    for (n = 0; n <= N; ++n)
+    nthreads = omp_get_num_threads();
+    tid = omp_get_thread_num();
+    dist = pow(up, tid * N / nthreads);
+    long i;
+    for (i = 0; i < N / nthreads; ++i)
     {
-      if (i == 0)
-        Sn = Sn * pow(up, n);
-      opt[n] = Sn;
+      opt[i + tid * N / nthreads] = Sn * dist;
       Sn *= up;
-      i += 1;
     }
   }
-  double final_time = walltime() - time_start;
 
-  printf("%d,", omp_get_max_threads());
-  printf("%f,", final_time);
+  printf("Parallel RunTime   :  %f seconds\n", walltime() - time_start);
+  printf("Final Result Sn    :  %.17g \n", Sn);
 
   double temp = 0.0;
   for (n = 0; n <= N; ++n)
   {
     temp += opt[n] * opt[n];
   }
-
-  printf("%.17g,", Sn);
-  printf("%f\n", temp / (double)N);
+  printf("Result ||opt||^2_2 :  %f\n", temp / (double)N);
+  printf("\n");
 
   return 0;
 }

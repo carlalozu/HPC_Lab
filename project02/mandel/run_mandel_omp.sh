@@ -9,7 +9,7 @@
 #SBATCH --time=01:00:00           # Wall clock time limit
 
 # Load some modules & list loaded modules
-module load gcc openmpi libpng
+module load gcc openmpi libpng/1.6.39-fz4tvmr
 module list
 
 # Compile
@@ -17,13 +17,13 @@ make clean
 make mandel_par
 
 # Create results file
-> results_omp.txt
+> results_strong.txt
+echo "Total time,Total number of iterations,Iterations/second,MFlop/s,Threads" | tee -a results_strong.txt
 
 # Run the program for OMP_NUM_THREADS equal to 1, 2, 4, 8, ..., 64, 128
 for ((i=0; i<=7; i++)) do
     OMP_NUM_THREADS=$((2**i)) # Set number of OpenMP threads
     echo "Running with $OMP_NUM_THREADS threads"
     export OMP_NUM_THREADS
-    ./mandel_par |  tee -a results_omp.txt
-    echo "-----------------------------------------" |  tee -a results_omp.txt
+    ./mandel_par | grep -E "(Total time|Total number of iterations|Iterations/second|MFlop/s|Number of threads)" | sed 's/.*: *//g' | sed 's/ .*//g' | paste -sd ',' - | tee -a results_strong.txt
 done
