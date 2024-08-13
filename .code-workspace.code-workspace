@@ -1,0 +1,8 @@
+{
+	"folders": [
+		{
+			"name": "SSH FS - euler",
+			"uri": "ssh://euler/cluster/home/calopez"
+		}
+	]
+}
