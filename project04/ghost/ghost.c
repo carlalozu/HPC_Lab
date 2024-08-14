@@ -64,7 +64,8 @@ int main(int argc, char *argv[])
     // Initialize MPI
     int ierr;
     ierr = MPI_Init(&argc, &argv);
-    if (ierr != MPI_SUCCESS) {
+    if (ierr != MPI_SUCCESS)
+    {
         fprintf(stderr, "Error initializing MPI.\n");
         MPI_Abort(MPI_COMM_WORLD, ierr);
     }
@@ -123,44 +124,43 @@ int main(int argc, char *argv[])
     rank_bottom = neighbours_ranks[3];
 
     // create derived datatype data_ghost_row
-    MPI_Type_contiguous(SUBDOMAIN, MPI_DOUBLE, &data_ghost_row);
+    MPI_Type_contiguous(DOMAINSIZE, MPI_DOUBLE, &data_ghost_row);
     MPI_Type_commit(&data_ghost_row);
 
     // create a datatype for sending the column
-    MPI_Type_vector(SUBDOMAIN, 1, DOMAINSIZE, MPI_DOUBLE, &data_ghost_col);
+    MPI_Type_vector(DOMAINSIZE, 1, DOMAINSIZE, MPI_DOUBLE, &data_ghost_col);
     MPI_Type_commit(&data_ghost_col);
 
     //  ghost cell exchange with the neighbouring cells in all directions
-    //  use MPI_Irecv(), MPI_Send(), MPI_Wait() or other viable alternatives
-
-    int first_row_index = 1;
-    int last_row_index = DOMAINSIZE*(DOMAINSIZE-1)+1;
-    int first_col_index = DOMAINSIZE;
-    int last_col_index = DOMAINSIZE*2-1;
-
     MPI_Request request[8];
     int tag1 = 1, tag2 = 2, tag3 = 3, tag4 = 4;
     int count = 0;
 
     // SEND
     //  to top
-    MPI_Isend(&data[first_row_index], 1, data_ghost_row, rank_top, tag1, MPI_COMM_WORLD, &request[count++]);
+    MPI_Isend(&data[DOMAINSIZE], 1, data_ghost_row, rank_top, tag1, MPI_COMM_WORLD, &request[count++]);
     //  to bottom
-    MPI_Isend(&data[last_row_index], 1, data_ghost_row, rank_bottom, tag2, MPI_COMM_WORLD, &request[count++]);
-    //  to right
-    MPI_Isend(&data[last_col_index], 1, data_ghost_col, rank_right, tag3, MPI_COMM_WORLD, &request[count++]);
-    //  to left
-    MPI_Isend(&data[first_col_index], 1, data_ghost_col, rank_left, tag4, MPI_COMM_WORLD, &request[count++]);
-
+    MPI_Isend(&data[DOMAINSIZE * (DOMAINSIZE - 2)], 1, data_ghost_row, rank_bottom, tag2, MPI_COMM_WORLD, &request[count++]);
     // RECEIVE
     // from top
-    MPI_Irecv(&data[first_row_index], 1, data_ghost_row, rank_top, tag2, MPI_COMM_WORLD, &request[count++]);
+    MPI_Irecv(&data[0], 1, data_ghost_row, rank_top, tag2, MPI_COMM_WORLD, &request[count++]);
     // from bottom
-    MPI_Irecv(&data[last_row_index], 1, data_ghost_row, rank_bottom, tag1, MPI_COMM_WORLD, &request[count++]);
+    MPI_Irecv(&data[DOMAINSIZE * (DOMAINSIZE - 1)], 1, data_ghost_row, rank_bottom, tag1, MPI_COMM_WORLD, &request[count++]);
+
+    MPI_Status status_[4];
+    MPI_Waitall(count, request, status_);
+
+    // SEND
+    //  to right
+    MPI_Isend(&data[DOMAINSIZE - 2], 1, data_ghost_col, rank_right, tag3, MPI_COMM_WORLD, &request[count++]);
+    //  to left
+    MPI_Isend(&data[1], 1, data_ghost_col, rank_left, tag4, MPI_COMM_WORLD, &request[count++]);
+
+    // RECEIVE
     // from right
-    MPI_Irecv(&data[last_col_index], 1, data_ghost_col, rank_right, tag4, MPI_COMM_WORLD, &request[count++]);
+    MPI_Irecv(&data[DOMAINSIZE - 1], 1, data_ghost_col, rank_right, tag4, MPI_COMM_WORLD, &request[count++]);
     // from left
-    MPI_Irecv(&data[first_col_index], 1, data_ghost_col, rank_left, tag3, MPI_COMM_WORLD, &request[count++]);
+    MPI_Irecv(&data[0], 1, data_ghost_col, rank_left, tag3, MPI_COMM_WORLD, &request[count++]);
 
     MPI_Status status[count];
     MPI_Waitall(count, request, status);
@@ -185,7 +185,8 @@ int main(int argc, char *argv[])
 
     // Finalize MPI
     ierr = MPI_Finalize();
-    if (ierr != MPI_SUCCESS) {
+    if (ierr != MPI_SUCCESS)
+    {
         fprintf(stderr, "Error finalizing MPI.\n");
         exit(1);
     }
