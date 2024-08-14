@@ -296,3 +296,6 @@ TSWLatexianTemp*
 # DS_Store
 **/.DS_Store
 notes.*
+
+# Do not ignore Makefiles
+!Makefile
