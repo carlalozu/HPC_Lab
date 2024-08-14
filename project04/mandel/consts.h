@@ -22,6 +22,7 @@ typedef struct {
     long starty; // Global domain start index of local domain in y-direction
     long endx;   // Global domain end   index of local domain in x-direction
     long endy;   // Global domain end   index of local domain in y-direction
+    int error;
 } Domain;
 
 typedef struct {
@@ -108,6 +109,18 @@ Domain createDomain(Partition p) {
     // compute size of the local domain
     d.nx = IMAGE_WIDTH/p.nx;
     d.ny = IMAGE_HEIGHT/p.ny;
+
+    // throw an error if IMAGE_WIDTH is not divisible by p.nx
+    if (IMAGE_WIDTH % p.nx != 0) {
+        fprintf(stderr, "Error: IMAGE_WIDTH (%d) is not divisible by p.nx (%d)\n", IMAGE_WIDTH, p.nx);
+        d.error += 1;
+    }
+
+    // throw an error if IMAGE_HEIGHT is not divisible by p.ny
+    if (IMAGE_HEIGHT % p.ny != 0) {
+        fprintf(stderr, "Error: IMAGE_HEIGHT (%d) is not divisible by p.nx (%d)\n", IMAGE_HEIGHT, p.ny);
+        d.error += 1;
+    }
 
     // compute index of the first pixel in the local domain
     d.startx = d.nx*p.x;

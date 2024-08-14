@@ -35,6 +35,9 @@ int main(int argc, char** argv) {
 	// Compute the local domain size and boundaries
 	// determine 2D dimensions of the local portion of the image
 	Domain d = createDomain(p); 
+	if (d.error) {
+        return EXIT_FAILURE;  // Exit program on error
+    }
 
 	if(mpi_rank == 0) printf("Processor grid size (%d, %d)\n", p.nx, p.ny);
 	printf("[Process %d] Coordinates [%d, %d]\n", mpi_rank, p.x, p.y);
@@ -125,7 +128,7 @@ int main(int argc, char** argv) {
 	if (mpi_rank != 0)
 	{
 		// send local partition c to the master process
-		MPI_Send(&c[0], 1, local_domain, 0, tag, MPI_COMM_WORLD);
+		MPI_Send(&c[0], 1, local_domain, 0, tag, p.comm);
 
 	}
 	/****************************************************************************/
@@ -150,7 +153,7 @@ int main(int argc, char** argv) {
 
 			// TODO: receive partition of the process proc into array c
 			// (overwrite its data)
-			MPI_Recv(&c[0], 1, local_domain, proc, tag, MPI_COMM_WORLD, &status);
+			MPI_Recv(&c[0], 1, local_domain, proc, tag, p.comm, &status);
 			
 			// write the partition of the process proc
 			for (j = 0; j < d1.ny; j++) // HEIGHT
