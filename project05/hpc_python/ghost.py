@@ -41,12 +41,12 @@ col_east = np.empty(SUBDOMAIN, dtype=np.int32)
 col_west = np.empty(SUBDOMAIN, dtype=np.int32)
 
 # Send and receive
-comm.Sendrecv(data[0, 1:-1], north, 1, new_data[DOMAINSIZE-1, 1:-1], south, 1)
-comm.Sendrecv(data[DOMAINSIZE-1, 1:-1], south, 2, new_data[0, 1:-1], north, 2)
-comm.Sendrecv(np.array(data[1:-1, DOMAINSIZE-1].data,
-              dtype=np.int32), east, 4, col_west, west, 4)
-comm.Sendrecv(np.array(data[1:-1, 0].data,
-              dtype=np.int32), west, 3, col_east, east, 3)
+comm.Sendrecv(data[1, 1:-1],            north, 1, new_data[DOMAINSIZE-1, 1:-1], south, 1)
+comm.Sendrecv(data[DOMAINSIZE-2, 1:-1], south, 2, new_data[0, 1:-1], north, 2)
+comm.Sendrecv(np.array(data[1:-1, DOMAINSIZE-2].data, dtype=np.int32),
+                                        east, 4, col_west, west, 4)
+comm.Sendrecv(np.array(data[1:-1, 1].data, dtype=np.int32),
+                                        west, 3, col_east, east, 3)
 
 new_data[1:-1, DOMAINSIZE-1] = col_east.data
 new_data[1:-1, 0] = col_west.data
