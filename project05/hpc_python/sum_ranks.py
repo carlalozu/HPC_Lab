@@ -7,14 +7,14 @@ size = comm.Get_size()
 rank = comm.Get_rank()
 proc = MPI.Get_processor_name()
 
-global_sum = comm.gather(rank)
+# using lowercase functions
+global_sum = comm.allreduce(rank, op=MPI.SUM)
 if rank == 0:
-    # Gathers into a list
-    print(f"Sum: {sum(global_sum)}")
+    print(f"Sum: {global_sum}")
 
+# using uppercase functions
 rank_array = np.array(rank, dtype=np.int32)
 total_sum = np.zeros(1, dtype=np.int32)
 comm.Allreduce(rank_array, total_sum, op=MPI.SUM)
-
 if rank == 0:
-    print(f"Sum: {sum(total_sum)}")
+    print(f"Sum: {total_sum[0]}")
