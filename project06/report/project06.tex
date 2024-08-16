@@ -15,8 +15,88 @@
 
 \section{Graph Partitioning with Julia: Load balancing for HPC [50 points]}
 
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|l|r|r|r|r|}
+    \hline
+    \textbf{Mesh} & \textbf{Coordinate} & \textbf{Metis v.5.1.0} & \textbf{Inertial} & \textbf{Spectral} \\ \hline
+    mesh1e1 & 18.0 & 17.0 & 20.0 & 18.0 \\ \hline
+    mesh2e1 & 37.0 & 35.0 & 40.0 & 39.0 \\ \hline
+    mesh3e1 & 19.0 & 18.0 & 19.0 & 18.0 \\ \hline
+    airfoil1 & 94.0 & 72.0 & 93.0 & 132.0 \\ \hline
+    netz4504\_dual & 25.0 & 25.0 & 43.0 & 23.0 \\ \hline
+    stufe & 16.0 & 16.0 & 19.0 & 16.0 \\ \hline
+    3elt & 172.0 & 92.0 & 218.0 & 117.0 \\ \hline
+    barth4 & 206.0 & 126.0 & 206.0 & 127.0 \\ \hline
+    ukerbe1 & 32.0 & 28.0 & 88.0 & 28.0 \\ \hline
+    crack & 353.0 & 186.0 & 341.0 & 233.0 \\ \hline
+    \end{tabular}
+    \caption{Table comparing different meshes across various methods.}
+\end{table}
+    
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|l|r|r|r|r|}
+    \hline
+    \textbf{Mesh} & \textbf{Coordinate} & \textbf{Coordinate} & \textbf{Metis (KWAY)} & \textbf{Metis (KWAY)} \\ 
+    \textbf{} & \textbf{8 parts} & \textbf{16 parts} & \textbf{8 parts} & \textbf{16 parts} \\ \hline
+    mesh3e1 & 75.0 & 118.0 & 71.0 & 187.0 \\ \hline
+    airfoil1 & 516.0 & 819.0 & 312.0 & 564.0 \\ \hline
+    netz4504\_dual & 127.0 & 198.0 & 93.0 & 162.0 \\ \hline
+    stufe & 123.0 & 228.0 & 107.0 & 188.0 \\ \hline
+    3elt & 733.0 & 1168.0 & 381.0 & 645.0 \\ \hline
+    barth4 & 875.0 & 1306.0 & 454.0 & 677.0 \\ \hline
+    ukerbe1 & 225.0 & 374.0 & 124.0 & 215.0 \\ \hline
+    crack & 1344.0 & 1861.0 & 777.0 & 1214.0 \\ \hline
+    \end{tabular}
+    \caption{Comparison of meshes with Coordinate and Metis (KWAY) partitioning for 8 and 16 parts.}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|l|r|r|r|r|}
+    \hline
+    \textbf{Mesh} & \textbf{Metis (RECURSIVE)} & \textbf{Metis (RECURSIVE)} & \textbf{Inertial} & \textbf{Inertial} \\ 
+    \textbf{} & \textbf{8 parts} & \textbf{16 parts} & \textbf{8 parts} & \textbf{16 parts} \\ \hline
+    mesh3e1 & 74.0 & 111.0 & 90.0 & 159.0 \\ \hline
+    airfoil1 & 311.0 & 580.0 & 670.0 & 1222.0 \\ \hline
+    netz4504\_dual & 100.0 & 154.0 & 143.0 & 228.0 \\ \hline
+    stufe & 112.0 & 197.0 & 151.0 & 282.0 \\ \hline
+    3elt & 418.0 & 651.0 & 817.0 & 1239.0 \\ \hline
+    barth4 & 429.0 & 687.0 & 954.0 & 1655.0 \\ \hline
+    ukerbe1 & 125.0 & 241.0 & 311.0 & 517.0 \\ \hline
+    crack & 759.0 & 1276.0 & 1400.0 & 2166.0 \\ \hline
+    \end{tabular}
+    \caption{Comparison of meshes with Metis (RECURSIVE) and Inertial partitioning for 8 and 16 parts.}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|l|r|r|}
+    \hline
+    \textbf{Mesh} & \textbf{Spectral} & \textbf{Spectral} \\ 
+    \textbf{} & \textbf{8 parts} & \textbf{16 parts} \\ \hline
+    mesh3e1 & 92.0 & 119.0 \\ \hline
+    airfoil1 & 397.0 & 632.0 \\ \hline
+    netz4504\_dual & 111.0 & 182.0 \\ \hline
+    stufe & 130.0 & 246.0 \\ \hline
+    3elt & 469.0 & 752.0 \\ \hline
+    barth4 & 548.0 & 838.0 \\ \hline
+    ukerbe1 & 126.0 & 237.0 \\ \hline
+    crack & 883.0 & 1419.0 \\ \hline
+    \end{tabular}
+    \caption{Comparison of meshes with Spectral partitioning for 8 and 16 parts.}
+\end{table}
+        
+    
 
 \section{HPC software frameworks [50 points]}
+Ran with 8 cores.
 
-
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\textwidth]{../poisson_petsc/surface_plot.pdf}
+    \caption{Result.}
+    \label{fig:data}
+\end{figure}
 \end{document}
