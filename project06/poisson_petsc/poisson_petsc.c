@@ -45,8 +45,8 @@ int main(int argc, char **args)
 
    /* Identify the starting and ending mesh points on each
       processor for the interior part of the mesh. We let PETSc decide
-      above. */
-
+      above.
+   */
    PetscCall(VecGetOwnershipRange(x, &rstart, &rend));
    PetscCall(VecGetLocalSize(x, &nlocal));
 
@@ -76,7 +76,9 @@ int main(int argc, char **args)
       the part that it owns locally.
    */
 
-   /* Set entries corresponding to the mesh interior */
+   /* 
+      Set entries corresponding to the mesh interior, Poisson equation.
+   */
    h = 1.0 / (n + 1);
    for (i = rstart; i < rend; i++)
    {
@@ -113,12 +115,14 @@ int main(int argc, char **args)
       }
    }
 
-   /* Assemble the matrix */
+   /* 
+      Assemble the matrix 
+   */
    PetscCall(MatAssemblyBegin(A, MAT_FINAL_ASSEMBLY));
    PetscCall(MatAssemblyEnd(A, MAT_FINAL_ASSEMBLY));
 
    /*
-      Set exact solution; then compute right-hand-side vector.
+      Assign value to the b vector, constant source function f
    */
    PetscCall(VecSet(b, twenty));
 
@@ -178,14 +182,15 @@ int main(int argc, char **args)
    /*
       Print vector x to an output file
    */
-
-   // Print the matrix A with a specific name
-   PetscCall(MatView(A, PETSC_VIEWER_STDOUT_WORLD));
-
    PetscViewer hdf5viewer;
    PetscCall(PetscViewerHDF5Open(PETSC_COMM_WORLD, "solution.h5", FILE_MODE_WRITE, &hdf5viewer));
    PetscCall(VecView(x, hdf5viewer));
    PetscCall(PetscViewerDestroy(&hdf5viewer));
+
+   /*
+      Print the matrix A to the console just to check it was assembled correctly
+   */
+   PetscCall(MatView(A, PETSC_VIEWER_STDOUT_WORLD));
 
    /*   Free work space.  All PETSc objects should be destroyed when they
       are no longer needed.
