@@ -60,10 +60,11 @@ int main(int argc, char **argv)
                             // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                             // n indicates if the point belongs to the mandelbrot set
                             // plot the number of iterations at point (i, j)
-#pragma omp critical
                             c = ((long)n * 255) / MAX_ITERS;
+#pragma omp critical{
                             png_plot(pPng, i, j, c, c, c);
                             nTotalIterationsCount += n;
+}
                      }
               }
        }

@@ -1,12 +1,10 @@
 # Some possible configs ########################################################
 
 # Euler GCC config (module load gcc openblas)
-CC = gcc                         # compiler (& linker)
-OPT = -O0                        # optimization flags (you may add more)
-CFLAGS = -Wall -std=gnu99 $(OPT) # standard compiler flags
-LDLIBS = -lopenblas -lm  		 # linker options
-OPT = -O3 -march=native -mtune=native -ffast-math -funroll-loops -ftree-vectorize -fopenmp
-        # optimization flags
+CC ?= gcc                         # compiler (& linker)
+OPT = -O3 -march=native -mtune=native -ffast-math -funroll-loops -ftree-vectorize
+# optimization flags
+LDLIBS = -lopenblas -lm  		   # linker options
 CFLAGS = -Wall -std=gnu99 $(OPT)   # standard compiler flags
 
 # Euler INTEL config (module load intel)
@@ -40,12 +38,12 @@ all: $(targets)
 benchmark-naive: benchmark.o dgemm-naive.o 
 	$(CC) -o $@ $^ $(LDLIBS)
 benchmark-blocked: benchmark.o dgemm-blocked.o
-	$(CC) -o $@ $^ $(LDLIBS)
+	$(CC) -o $@ $^ $(LDLIBS) -fopenmp
 benchmark-blas: benchmark.o dgemm-blas.o
 	$(CC) -o $@ $^ $(LDLIBS)
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $<
+	$(CC) -c $(CFLAGS) -fopenmp $<
 
 .PHONY: clean
 clean:

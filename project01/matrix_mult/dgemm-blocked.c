@@ -1,5 +1,6 @@
 const char *dgemm_desc = "Blocked dgemm.";
 #include <math.h>
+#include <omp.h>
 
 /* This routine performs a dgemm operation
  *

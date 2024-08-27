@@ -26,9 +26,9 @@ function inertial_part(A, coords)
 
     # 2. Construct the matrix M. (see pdf of the assignment)
     #   (assumes 2 dim)
-    Sxx = sum(coords[:,1].-mass_[1]).^2
-    Syy = sum(coords[:,2].-mass_[2]).^2
-    Sxy = sum(coords[:,1].-mass_[1]).*sum(coords[:,2].-mass_[2])
+    Sxx = sum((coords[:,1].-mass_[1]).^2)
+    Syy = sum((coords[:,2].-mass_[2]).^2)
+    Sxy = sum((coords[:,1].-mass_[1]).*(coords[:,2].-mass_[2]))
 
     M = [Syy, Sxy, Sxy, Sxx]
     M = reshape(M, d, d)

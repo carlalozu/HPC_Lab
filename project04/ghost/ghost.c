@@ -101,27 +101,13 @@ int main(int argc, char *argv[])
     MPI_Comm new_communicator;
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, reorder, &new_communicator);
 
-    enum DIRECTIONS
-    {
-        LEFT,
-        RIGHT,
-        UP,
-        DOWN
-    };
-    char *neighbours_names[4] = {"left", "right", "up", "down"};
-    int neighbours_ranks[4];
+    int rank_left, rank_right, rank_top, rank_bottom;
 
     // Let consider dims[0] = X, so the shift tells us our left and right neighbours
-    MPI_Cart_shift(new_communicator, 1, 1, &neighbours_ranks[LEFT], &neighbours_ranks[RIGHT]);
+    MPI_Cart_shift(new_communicator, 1, 1, &rank_left, &rank_right);
 
     // Let consider dims[1] = Y, so the shift tells us our up and down neighbours
-    MPI_Cart_shift(new_communicator, 0, 1, &neighbours_ranks[UP], &neighbours_ranks[DOWN]);
-
-    // find your top/bottom/left/right neighbor using the new communicator, see MPI_Cart_shift()
-    rank_left = neighbours_ranks[0];
-    rank_right = neighbours_ranks[1];
-    rank_top = neighbours_ranks[2];
-    rank_bottom = neighbours_ranks[3];
+    MPI_Cart_shift(new_communicator, 0, 1, &rank_top, &rank_bottom);
 
     // create derived datatype data_ghost_row
     MPI_Type_contiguous(DOMAINSIZE, MPI_DOUBLE, &data_ghost_row);
